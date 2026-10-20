@@ -1,0 +1,55 @@
+# VAGEN evaluation on SRC "approach". The same seed_list is used by
+# scripts/eval_surgicai_baseline.py so both methods see identical needle poses.
+#   bash scripts/eval_vagen.sh configs/eval_src_approach.yaml run.backend=vllm backends.vllm.model=<ckpt>
+defaults:
+  - ../third_party/VAGEN/vagen/configs/eval_default
+
+fileroot: ${oc.env:PWD}
+
+envs:
+  - name: RemoteEnv
+    n_envs: 100
+    tag_id: src_approach
+    seed_list: [20000, 20001, 20002, 20003, 20004, 20005, 20006, 20007, 20008, 20009,
+                20010, 20011, 20012, 20013, 20014, 20015, 20016, 20017, 20018, 20019,
+                20020, 20021, 20022, 20023, 20024, 20025, 20026, 20027, 20028, 20029,
+                20030, 20031, 20032, 20033, 20034, 20035, 20036, 20037, 20038, 20039,
+                20040, 20041, 20042, 20043, 20044, 20045, 20046, 20047, 20048, 20049,
+                20050, 20051, 20052, 20053, 20054, 20055, 20056, 20057, 20058, 20059,
+                20060, 20061, 20062, 20063, 20064, 20065, 20066, 20067, 20068, 20069,
+                20070, 20071, 20072, 20073, 20074, 20075, 20076, 20077, 20078, 20079,
+                20080, 20081, 20082, 20083, 20084, 20085, 20086, 20087, 20088, 20089,
+                20090, 20091, 20092, 20093, 20094, 20095, 20096, 20097, 20098, 20099]
+    max_turns: 12
+    config:
+      base_urls: "http://localhost:8000"
+      timeout: 600
+      retries: 6
+      task: approach
+      render_mode: vision
+      prompt_format: wm
+      max_actions_per_step: 3
+      action_sep: "|"
+      max_move_mm: 20
+      max_rotate_deg: 30
+      show_target: true
+      format_reward: 0.1
+      progress_reward_per_mm: 0.05
+      progress_reward_per_deg: 0.02
+      success_reward: 10.0
+    chat_config:
+      temperature: 0
+      max_tokens: 1024
+      top_p: 1.0
+
+experiment:
+  dump_dir: ${fileroot}/results/vagen_eval/src_approach
+  default_max_turns: 12
+
+run:
+  backend: "vllm"
+  base_seed: 0
+  # One simulator = one episode at a time. Raise with more servers in base_urls.
+  max_concurrent_jobs: 1
+  resume: skip_completed
+  live_summary: true

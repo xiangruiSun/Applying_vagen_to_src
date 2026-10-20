@@ -1,0 +1,13 @@
+[submodule "third_party/VAGEN"]
+	path = third_party/VAGEN
+	url = https://github.com/mll-lab-nu/VAGEN.git
+	branch = vagen-lite
+[submodule "third_party/SurgicAI"]
+	path = third_party/SurgicAI
+	url = https://github.com/surgical-robotics-ai/SurgicAI.git
+[submodule "third_party/surgical_robotics_challenge"]
+	path = third_party/surgical_robotics_challenge
+	url = https://github.com/surgical-robotics-ai/surgical_robotics_challenge.git
+[submodule "third_party/surgical_robotics_challenge_old"]
+	path = third_party/surgical_robotics_challenge_old
+	url = https://github.com/JinnWu686/surgical_robotics_challenge.git

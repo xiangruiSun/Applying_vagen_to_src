@@ -1,0 +1,14 @@
+# Simulator side (Python 3.8, ROS Noetic). AMBF / ambf_client, PyKDL and rospy
+# come from the AMBF + ROS install; surgical_robotics_challenge from
+# third_party/surgical_robotics_challenge_old/scripts (pip install -e .).
+numpy
+pillow
+pyyaml
+gym                      # SurgicAI subtask_env imports gym.spaces.box
+gymnasium==0.29.1        # versions from SurgicAI's README
+stable-baselines3==2.2.1
+torch                    # needed to load SurgicAI baseline checkpoints
+# VAGEN remote env server
+fastapi
+uvicorn<0.41
+httpx

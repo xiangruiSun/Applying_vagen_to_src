@@ -1,0 +1,24 @@
+# Validation uses a held-out seed range (10000+) disjoint from training.
+envs:
+  - name: RemoteEnv
+    n_envs: 16
+    data_source: src_approach
+    seed: [10000, 10015, 1]
+    max_turns: 8
+    response_length_per_turn: 512
+    config:
+      base_urls: "http://localhost:8000"
+      timeout: 600
+      retries: 6
+      task: approach
+      render_mode: vision
+      prompt_format: wm
+      max_actions_per_step: 3
+      action_sep: "|"
+      max_move_mm: 20
+      max_rotate_deg: 30
+      show_target: true
+      format_reward: 0.1
+      progress_reward_per_mm: 0.05
+      progress_reward_per_deg: 0.02
+      success_reward: 10.0
