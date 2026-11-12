@@ -28,7 +28,7 @@ def main() -> None:
     parser.add_argument("--trans_error", type=float, default=0.5, help="success threshold, cm (SurgicAI convention)")
     parser.add_argument("--angle_error", type=float, default=30.0, help="success threshold, degrees")
     parser.add_argument("--max_low_level_steps", type=int, default=300)
-    parser.add_argument("--camera_topic", default="/ambf/env/cameras/cameraL/ImageData",
+    parser.add_argument("--camera_topic", default="/ambf/env/cameras/cameraL/ImageData/compressed",
                         help='ROS image topic; "" for text-only observations')
     parser.add_argument("--image_size", type=int, nargs=2, default=[448, 336], metavar=("W", "H"))
     parser.add_argument("--flip_image", action="store_true")
@@ -39,12 +39,12 @@ def main() -> None:
     setup_sim_paths()
 
     import uvicorn
-    from vagen.envs_remote import GymService
+    from vagen.envs._common.remote.service import GymService
 
     from .handler import SRCHandler
     from .sim import SRCSim
 
-    # Must be created on the main thread (AMBF client -> rospy.init_node).
+    # Must be created on the main thread (AMBF client creates the ROS node).
     sim = SRCSim(
         task=args.task,
         trans_error=args.trans_error,

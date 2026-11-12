@@ -36,7 +36,7 @@ def oracle_answer(obs_str: str, max_move: float, max_rot: float) -> str:
 
     cur, tgt = pose("Gripper pose"), pose("Target pose")
     if cur is None or tgt is None:
-        return "<observation>?</observation><think>no target</think><answer>gripper(close)</answer><prediction>?</prediction>"
+        return "<perception>?</perception><reasoning>no target</reasoning><prediction>?</prediction><answer>gripper(close)</answer>"
     d = [t - c for c, t in zip(cur, tgt)]
     clip = lambda v, m: max(-m, min(m, v))
     acts = []
@@ -45,16 +45,17 @@ def oracle_answer(obs_str: str, max_move: float, max_rot: float) -> str:
     if max(abs(v) for v in d[3:6]) > 2.0:
         acts.append("rotate({:.1f}, {:.1f}, {:.1f})".format(*(clip(v, max_rot) for v in d[3:6])))
     acts.append("gripper(close)" if not acts else "gripper(open)")
-    return ("<observation>The gripper is above the phantom.</observation>"
-            "<think>Move toward the target pose.</think>"
-            f"<answer>{'|'.join(acts)}</answer>"
-            "<prediction>The gripper will be closer to the target.</prediction>")
+    return ("<perception>The gripper is above the phantom.</perception>"
+            "<reasoning>Move toward the target pose.</reasoning>"
+            "<prediction>The gripper will be closer to the target.</prediction>"
+            f"<answer>{'|'.join(acts)}</answer>")
 
 
 async def run_episodes(env, episodes: int, max_turns: int, seed0: int, save_dir: str) -> None:
-    print((await env.system_prompt())["obs_str"][:600], "...\n")
     for ep in range(episodes):
         obs, info = await env.reset(seed0 + ep)
+        if ep == 0:  # the remote client opens its session on the first reset
+            print((await env.system_prompt())["obs_str"][:600], "...\n")
         for turn in range(max_turns):
             _save(obs, save_dir, ep, turn)
             print(f"--- ep {ep} turn {turn} ---\n{obs['obs_str'][:400]}")
@@ -94,19 +95,22 @@ def main() -> None:
         from vagen_src.sim import SRCSim
         from vagen_src.src_env import SRCEnv
 
-        camera = "/ambf/env/cameras/cameraL/ImageData" if args.render_mode == "vision" else None
+        camera = "/ambf/env/cameras/cameraL/ImageData/compressed" if args.render_mode == "vision" else None
         env = SRCEnv(cfg, sim=SRCSim(task=args.task, camera_topic=camera))
     else:
         from vagen_src.paths import setup_vagen_path
 
         setup_vagen_path()
-        from vagen.envs_remote import GymImageEnvClient
+        from vagen.envs.remote import GymImageEnvClient
 
         env = GymImageEnvClient({"base_urls": args.base_url, "timeout": 600, "retries": 3, **cfg})
 
-    asyncio.get_event_loop().run_until_complete(
+    asyncio.run(
         run_episodes(env, args.episodes, args.max_turns, args.seed, args.save_dir)
     )
+    # rclpy's spin thread aborts the interpreter on normal teardown (ROS 2 shim).
+    sys.stdout.flush()
+    os._exit(0)
 
 
 if __name__ == "__main__":

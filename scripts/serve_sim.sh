@@ -3,5 +3,7 @@
 #   bash scripts/serve_sim.sh --task approach --port 8000
 set -euo pipefail
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+source "$REPO_ROOT/scripts/sim_env.sh"
 cd "$REPO_ROOT"
-python3 -m vagen_src.serve "$@" 2>&1 | tee "results/serve_$(date +%Y%m%d_%H%M%S).log"
+mkdir -p results
+"$SIM_PYTHON" -m vagen_src.serve "$@" 2>&1 | tee "results/serve_$(date +%Y%m%d_%H%M%S).log"

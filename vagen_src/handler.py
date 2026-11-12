@@ -13,7 +13,7 @@ import asyncio
 import logging
 from typing import Any, Dict, Optional
 
-from vagen.envs_remote import BaseGymHandler
+from vagen.envs._common.remote.handler import BaseGymHandler
 
 from .sim import SRCSim
 from .src_env import SRCEnv
@@ -26,8 +26,7 @@ class SRCHandler(BaseGymHandler):
         super().__init__(session_timeout=session_timeout, max_sessions=0)
         self.sim = sim
         self.slot_wait_timeout = slot_wait_timeout
-        # Created lazily: on Python 3.8 asyncio primitives bind to the loop
-        # that exists at construction time, which is not uvicorn's loop.
+        # Created lazily, inside uvicorn's event loop.
         self._slot: Optional[asyncio.Semaphore] = None
 
     async def create_env(self, env_config: Dict[str, Any]) -> SRCEnv:

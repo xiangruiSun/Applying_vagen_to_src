@@ -3,7 +3,7 @@ Offline test of the glue code with a fake SurgicAI env (no ROS / AMBF needed).
 
 Checks primitive parsing, primitive -> low-level step expansion, SRCEnv's
 VAGEN interface and the full HTTP path through VAGEN's GymService and
-GymImageEnvClient. Run with the simulator-side Python (3.8):
+GymImageEnvClient. Run with the simulator-side Python:
 
     pip install pytest numpy pillow fastapi "uvicorn<0.41" httpx
     python -m pytest tests -q
@@ -99,14 +99,19 @@ CFG = {"task": "approach", "render_mode": "vision", "prompt_format": "wm"}
 
 
 def test_parsing():
-    r = parse_response("<observation>a</observation><think>b</think><answer>move(1,2,3)|gripper(close)</answer>"
-                       "<prediction>c</prediction>", "wm")
+    r = parse_response("<perception>a</perception><reasoning>b</reasoning><prediction>c</prediction>"
+                       "<answer>move(1,2,3)|gripper(close)</answer>", "wm")
     assert r["format_correct"] and r["actions"] == ["move(1,2,3)", "gripper(close)"]
     assert parse_primitive("rotate(5, -3, 0)").values == (5.0, -3.0, 0.0)
     assert parse_primitive("gripper(open)").jaw_open is True
     assert parse_primitive("move(1,2)") is None
     assert parse_primitive("fly(1,2,3)") is None
     assert not parse_response("move(1,2,3)", "wm")["format_correct"]
+    # Malformed but salvageable: executed unless strict, never format-correct.
+    loose = "I think <answer>move(1,2,3)</answer>"
+    assert parse_response(loose, "wm")["actions"] == ["move(1,2,3)"]
+    assert not parse_response(loose, "wm")["format_correct"]
+    assert parse_response(loose, "wm", strict_format=True)["actions"] == []
 
 
 def test_primitive_expansion_counts_steps_like_surgicai():
@@ -147,7 +152,7 @@ def test_env_episode_reaches_success():
         await env.close()
         return info, total
 
-    info, total = asyncio.get_event_loop().run_until_complete(run())
+    info, total = asyncio.run(run())
     assert info["success"] and info["metrics"]["traj_metrics"]["success"]
     assert 0 < info["low_level_steps"] <= 300
     assert total > 10
@@ -161,13 +166,14 @@ def test_invalid_answer_gets_no_format_reward():
         await env.reset(1)
         return await env.step("I would move left")
 
-    _, reward, done, info = asyncio.get_event_loop().run_until_complete(run())
+    _, reward, done, info = asyncio.run(run())
     assert reward == 0.0 and not done and info["low_level_steps"] == 0
 
 
 def test_remote_roundtrip_through_vagen_service():
     import uvicorn
-    from vagen.envs_remote import GymImageEnvClient, GymService
+    from vagen.envs._common.remote.service import GymService
+    from vagen.envs.remote import GymImageEnvClient
 
     from vagen_src.handler import SRCHandler
 
@@ -201,7 +207,7 @@ def test_remote_roundtrip_through_vagen_service():
         return results
 
     try:
-        results = asyncio.get_event_loop().run_until_complete(run())
+        results = asyncio.run(run())
     finally:
         server.should_exit = True
         thread.join(timeout=5)

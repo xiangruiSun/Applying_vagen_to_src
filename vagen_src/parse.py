@@ -1,10 +1,10 @@
 """
 Parsing for VLM responses and mid-level SRC primitives.
 
-Response formats (same as VAGEN's primitive_skill env):
+Response formats (VAGEN's shared protocol, vagen/envs/_common/response_format.py):
   - free_think: <think>...</think><answer>...</answer>
-  - wm:         <observation>...</observation><think>...</think>
-                <answer>...</answer><prediction>...</prediction>
+  - wm:         <perception>...</perception><reasoning>...</reasoning>
+                <prediction>...</prediction><answer>...</answer>
 
 Mid-level primitives inside <answer>, separated by `action_sep`:
   move(dx, dy, dz)            translate the active gripper, millimetres, robot base frame
@@ -21,17 +21,7 @@ import re
 from dataclasses import dataclass
 from typing import Any, Dict, List, Optional, Tuple
 
-_PARSE_PATTERNS = {
-    "free_think": r"<think>(.*?)</think>\s*<answer>(.*?)</answer>",
-    "wm": (
-        r"<observation>(.*?)</observation>\s*"
-        r"<think>(.*?)</think>\s*"
-        r"<answer>(.*?)</answer>\s*"
-        r"<prediction>(.*?)</prediction>"
-    ),
-}
-
-VALID_FORMATS = list(_PARSE_PATTERNS.keys())
+VALID_FORMATS = ["free_think", "wm"]
 
 _PRIMITIVE_RE = re.compile(r"^\s*([a-zA-Z_]+)\s*\((.*)\)\s*$", re.DOTALL)
 
@@ -53,32 +43,39 @@ def parse_response(
     prompt_format: str = "wm",
     action_sep: str = "|",
     max_actions: int = 3,
+    strict_format: bool = False,
 ) -> Dict[str, Any]:
-    """Extract reasoning fields and the raw action strings from an LLM response."""
-    result: Dict[str, Any] = {
-        "llm_raw_response": response,
-        "actions": [],
-        "format_correct": False,
-    }
-    pattern = _PARSE_PATTERNS.get(prompt_format)
-    if pattern is None:
+    """Extract reasoning fields and the raw action strings from an LLM response.
+
+    `format_correct` is VAGEN's strict protocol bit (earns the format reward).
+    With strict_format=False a malformed response whose <answer> can still be
+    found is executed anyway (no format reward), as VAGEN's own eval configs do.
+    """
+    from vagen.envs._common.response_format import (
+        action_count_within_limit,
+        parse_free_think_sections,
+        parse_wm_sections,
+        split_actions,
+    )
+
+    if prompt_format == "wm":
+        sec = parse_wm_sections(response)
+    elif prompt_format == "free_think":
+        sec = parse_free_think_sections(response)
+    else:
         raise ValueError(f"Unknown prompt_format: {prompt_format}. Valid: {VALID_FORMATS}")
 
-    match = re.search(pattern, response, re.DOTALL)
-    if not match:
-        return result
-
-    if prompt_format == "free_think":
-        result["think"] = match.group(1).strip()
-        action_text = match.group(2).strip()
-    else:
-        result["observation"] = match.group(1).strip()
-        result["think"] = match.group(2).strip()
-        action_text = match.group(3).strip()
-        result["prediction"] = match.group(4).strip()
-
-    result["format_correct"] = True
-    result["actions"] = [a.strip() for a in action_text.split(action_sep) if a.strip()][:max_actions]
+    format_correct = bool(sec.format_correct) and action_count_within_limit(sec.answer, action_sep, max_actions)
+    result: Dict[str, Any] = {
+        "llm_raw_response": response,
+        "perception": sec.perception,
+        "reasoning": sec.reasoning,
+        "prediction": sec.prediction,
+        "actions": [],
+        "format_correct": format_correct,
+    }
+    if format_correct or (not strict_format and sec.answer):
+        result["actions"] = split_actions(sec.answer, action_sep, max_actions)
     return result
 
 

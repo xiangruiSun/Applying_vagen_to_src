@@ -6,8 +6,8 @@ primitives, each expanded into SurgicAI low-level steps by SRCSim. An episode
 ends on SurgicAI success or when the low-level step budget (300, as in
 SurgicAI's evaluation) runs out; VAGEN's `max_turns` caps the turns.
 
-This module is imported on the simulator machine (Python 3.8, ROS Noetic), so
-it avoids Python 3.9+ only APIs such as asyncio.to_thread.
+All simulator calls run on SRCSim's single worker thread (AMBF / ROS handles
+are not thread-safe), hence run_in_executor rather than asyncio.to_thread.
 """
 
 from __future__ import annotations
@@ -18,7 +18,7 @@ import time
 from dataclasses import dataclass, fields
 from typing import Any, Callable, Dict, List, Optional, Tuple
 
-from vagen.envs.gym_image_env import GymImageEnv
+from vagen.envs import GymImageEnv
 
 from .parse import VALID_FORMATS, parse_primitives, parse_response
 from .prompt import get_format_instruction, observation_text, system_prompt
@@ -33,6 +33,9 @@ class SRCEnvConfig:
     task: str = "approach"
     render_mode: str = "vision"         # vision | text
     prompt_format: str = "wm"           # wm | free_think
+    # False: execute a salvageable <answer> even if the response is malformed
+    # (it still earns no format reward). Same switch as VAGEN's own envs.
+    strict_format: bool = False
     max_actions_per_step: int = 3
     action_sep: str = "|"
     max_move_mm: float = 20.0
@@ -115,6 +118,7 @@ class SRCEnv(GymImageEnv):
             prompt_format=self.cfg.prompt_format,
             action_sep=self.cfg.action_sep,
             max_actions=self.cfg.max_actions_per_step,
+            strict_format=self.cfg.strict_format,
         )
         prims, all_valid = parse_primitives(parsed["actions"])
         before = self.sim.state()
@@ -158,7 +162,7 @@ class SRCEnv(GymImageEnv):
     # ------------------------------------------------------------------
 
     async def _run(self, fn, *args):
-        loop = asyncio.get_event_loop()
+        loop = asyncio.get_running_loop()
         return await loop.run_in_executor(self.sim.executor, fn, *args)
 
     async def system_prompt(self) -> Dict[str, Any]:

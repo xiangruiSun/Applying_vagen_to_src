@@ -6,15 +6,15 @@ suturing subtasks of the [Surgical Robotics Challenge](https://github.com/surgic
 (SRC), and compare it with [SurgicAI](https://github.com/surgical-robotics-ai/SurgicAI)'s RL / imitation policies
 as the baseline.
 
-This repo only contains the **mid-level glue code**. The three upstream projects are pulled in as git submodules,
-the same way SurgicAI references SRC:
+This repo only contains the **mid-level glue code**. The upstream projects are git submodules:
 
 | Submodule | Upstream | Pinned at | Why |
 |---|---|---|---|
-| `third_party/VAGEN` | mll-lab-nu/VAGEN | `vagen-lite` branch | VLM multi-turn RL trainer, evaluator, remote-env client/server |
-| `third_party/SurgicAI` | surgical-robotics-ai/SurgicAI | `b7ce546` | Subtask gym envs + pretrained baseline checkpoints |
-| `third_party/surgical_robotics_challenge` | surgical-robotics-ai/surgical_robotics_challenge | `03befbf` (v2.0.0) | SRC, the version SurgicAI pins as `_new` |
-| `third_party/surgical_robotics_challenge_old` | JinnWu686/surgical_robotics_challenge | `d2faceac` | SRC fork SurgicAI pins as `_old`; **its RL envs import `kinematics.psmFK` and `utils.task3_init`, which only exist here**, so this is the one used at runtime |
+| `third_party/VAGEN` | mll-lab-nu/VAGEN | `main` @ `41df5e7` (VAGEN-Lite on verl 0.9) | evaluator, RL trainer, remote-env client/server |
+| `third_party/SurgicAI` | xiangruiSun/SurgicAI | `jin-hierarchical-repro` @ `1dcc427` | subtask gym envs + baseline checkpoints; this fork also runs on **ROS 2 Jazzy / AMBF 3.0** through its `RL/ros1_compat` rospy shim |
+
+SurgicAI's envs need the *old* SRC (`kinematics.psmFK`, `utils.task3_init`). The fork carries it as its own
+submodule `surgical_robotics_challenge_old` (JinnWu686 fork @ `d2faceac`), so clone recursively:
 
 ```bash
 git clone --recursive https://github.com/xiangruiSun/Applying_vagen_to_src.git
@@ -25,24 +25,29 @@ git submodule update --init --recursive
 ## How it fits together
 
 ```
- GPU machine (Python 3.12)                      Simulator machine (Ubuntu 20.04, ROS Noetic, Python 3.8)
-┌──────────────────────────────┐   HTTP     ┌────────────────────────────────────────────────────────┐
-│ VAGEN trainer / evaluator    │──────────▶ │ vagen_src.serve   (VAGEN GymService + SRCHandler)      │
-│   env name: RemoteEnv        │ ◀──────────│   SRCEnv  : text + camera image obs, parses VLM answer │
-│   (GymImageEnvClient)        │ obs/reward │   SRCSim  : primitives -> SurgicAI low-level steps     │
-└──────────────────────────────┘            │   SurgicAI <Task>_env  ──ROS──▶  AMBF + SRC            │
-                                            └────────────────────────────────────────────────────────┘
+ GPU machine (RTX 3090, Python 3.12)             Simulator machine (Ubuntu 24.04, ROS 2 Jazzy, AMBF 3.0)
+┌──────────────────────────────┐              ┌────────────────────────────────────────────────────────┐
+│ SGLang server: the VLM       │ ◀── chat ─── │ VAGEN evaluator  (python -m vagen.evaluation)          │
+│   scripts/serve_model.sh     │  (SSH tunnel)│   env name: RemoteEnv ── HTTP ──▶ vagen_src.serve      │
+└──────────────────────────────┘              │   SRCEnv  : text + camera image obs, parses VLM answer │
+                                              │   SRCSim  : primitives -> SurgicAI low-level steps     │
+                                              │   SurgicAI <Task>_env  ──ROS──▶  AMBF + old SRC scene  │
+                                              └────────────────────────────────────────────────────────┘
 ```
 
-* SRC/AMBF needs ROS 1 + Python 3.8, while VAGEN needs Python ≥ 3.10, so the environment runs as a separate
-  HTTP service using VAGEN's own remote-env framework (`vagen/envs_remote`). VAGEN is used unmodified: training
-  and evaluation configs just use the built-in `RemoteEnv`.
+* The simulator side needs ROS + SB3 2.2.1 / gymnasium 0.29.1, the VAGEN side needs Torch 2.11 / gymnasium 1.x,
+  so the environment runs as a separate HTTP service using VAGEN's own remote-env framework. VAGEN is used
+  unmodified: configs just use the built-in `RemoteEnv`.
 * The env wraps SurgicAI's subtask envs **without modification** (`approach`, `place`, `insert`, `regrasp`,
   `pullout`), so the VLM and the baseline share the reset distribution, dynamics and success criterion.
+* The same code runs on a ROS 1 Noetic host: `paths.setup_sim_paths()` delegates to the fork's
+  `hierarchical_paths.setup_sim_imports()`, which only enables the rospy shim when real `rospy` is absent.
 
 ### Action space (mid-level)
 
-A VLM turn contains up to 3 primitives, e.g. `<answer>move(8, 5, -10)|rotate(5, 0, -3)</answer>`:
+A VLM turn contains up to 3 primitives, e.g. `<answer>move(8, 5, -10)|rotate(5, 0, -3)</answer>`. Responses use
+VAGEN's shared protocol (`<perception>…</perception><reasoning>…</reasoning><prediction>…</prediction><answer>…</answer>`
+for `prompt_format: wm`, `<think>…</think><answer>…</answer>` for `free_think`):
 
 | Primitive | Meaning |
 |---|---|
@@ -55,7 +60,7 @@ SurgicAI's `env.step`. Episodes end on success or after 300 low-level steps (Sur
 
 ### Observation
 
-Camera image (`/ambf/env/cameras/cameraL/ImageData`) + text with the active arm's pose and, if
+Camera image (`/ambf/env/cameras/cameraL/ImageData/compressed`) + text with the active arm's pose and, if
 `show_target: true`, the target pose. SurgicAI's state-based policies observe the goal pose, so
 `show_target: true` is the like-for-like setting; `show_target: false` makes the VLM localise the target visually.
 
@@ -73,84 +78,85 @@ episodes). VAGEN additionally reports VLM turns.
 
 ```
 vagen_src/                 glue package
-  paths.py                 puts third_party/* on sys.path (overridable via env vars)
+  paths.py                 puts third_party/* on sys.path, enables the ROS 2 shim when needed
   tasks.py                 SurgicAI task registry + instructions
-  parse.py, prompt.py      VLM response parsing / prompts (VAGEN primitive_skill style)
-  camera.py                ROS 1 image grabber
+  parse.py, prompt.py      VLM response parsing / prompts (VAGEN response protocol)
+  camera.py                ROS image grabber (compressed topic by default)
   sim.py                   SRCSim: SurgicAI env + primitive execution + metrics
   src_env.py               SRCEnv: VAGEN GymImageEnv
   handler.py, serve.py     VAGEN remote env server
 configs/                   VAGEN train / val / eval specs (approach subtask)
 scripts/
-  launch_sim.sh            roscore + AMBF with SRC (SurgicAI's launch flags)
+  sim_env.sh               ROS 2 environment for the simulator side (sourced by the others)
+  launch_sim.sh            AMBF with the old SRC scene (SurgicAI's launch flags + light frame)
   serve_sim.sh             start the env server
+  serve_model.sh           SGLang VLM server (GPU machine)
   smoke_test_env.py        scripted end-to-end test, no VLM needed
-  train_ppo_qwen25vl3b.sh  VAGEN PPO training
-  eval_vagen.sh            VAGEN evaluation (API model or trained checkpoint)
+  eval_vagen.sh            VAGEN evaluation against a served model
   eval_surgicai_baseline.py  SurgicAI pretrained policies on the same seeds
   compare_results.py       results table
+  train_ppo_qwen25vl3b.sh  VAGEN PPO training (NOT yet ported to VAGEN main, see known gaps)
 tests/test_fake_sim.py     offline test of the glue with a fake SurgicAI env
 ```
 
 ## Setup
 
-### 1. Simulator machine (Ubuntu 20.04, ROS Noetic, Python 3.8)
+### 1. Simulator machine (tested: Ubuntu 24.04, ROS 2 Jazzy, colcon-built AMBF 3.0 in `~/ros_ambf_ws`)
 
-1. Install [AMBF 2.0](https://github.com/WPI-AIM/ambf) and ROS Noetic as described in the SRC README
-   (`third_party/surgical_robotics_challenge_old`), then install the SRC python package from the **old** fork:
-   ```bash
-   cd third_party/surgical_robotics_challenge_old/scripts && pip3 install -e .
-   ```
-2. Python deps for SurgicAI + the env server:
-   ```bash
-   pip3 install -r requirements-sim.txt
-   ```
-3. Run:
-   ```bash
-   bash scripts/launch_sim.sh                                # terminal 1
-   python3 scripts/smoke_test_env.py --mode local --task approach   # optional check
-   bash scripts/serve_sim.sh --task approach --port 8000     # terminal 2
-   ```
-   One simulator runs one episode at a time. For parallel rollouts launch more simulators (each with its own
-   `ROS_MASTER_URI`) and servers on other ports, then list all of them in `base_urls`.
-
-### 2. GPU machine (training / VLM evaluation)
-
-Follow VAGEN's install inside the submodule:
 ```bash
-conda create -n vagen python=3.12 -y && conda activate vagen
-cd third_party/VAGEN
-cd verl && USE_MEGATRON=0 bash scripts/install_vllm_sglang_mcore.sh && pip install --no-deps -e . && cd ..
-pip install -e . && pip install "trl==0.26.2"
-cd ../..
-python scripts/smoke_test_env.py --mode remote --base_url http://<sim-host>:8000
+# AMBF: see third_party/SurgicAI/README.md section 1 (branch ambf-3.0, colcon build)
+python3 -m venv --system-site-packages ~/vagen_src/venv_sim        # system site-packages for rclpy / PyKDL
+~/vagen_src/venv_sim/bin/pip install torch --index-url https://download.pytorch.org/whl/cpu
+~/vagen_src/venv_sim/bin/pip install -r requirements-sim.txt
+
+bash scripts/launch_sim.sh                                          # terminal 1 (AMBF window)
+source scripts/sim_env.sh
+$SIM_PYTHON scripts/smoke_test_env.py --mode local --task approach  # optional check, no VLM
+bash scripts/serve_sim.sh --task approach --port 8000               # terminal 2
 ```
-Set `base_urls` in `configs/*.yaml` to `http://<sim-host>:8000` (or tunnel with `ssh -L 8000:localhost:8000`).
+
+`scripts/sim_env.sh` sets `ROS_DOMAIN_ID=42` (keeps this scene apart from other AMBF / dVRK nodes),
+`FASTDDS_BUILTIN_TRANSPORTS=UDPv4`, and `SIM_PYTHON` (override any of them from the environment).
+One simulator runs one episode at a time. For parallel rollouts launch more simulators (each with its own
+`ROS_DOMAIN_ID`) and servers on other ports, then list all of them in `base_urls`.
+
+### 2. VAGEN (evaluator on the simulator machine, model server on the GPU machine)
+
+Install VAGEN `main` in a Python 3.12 environment on both (CUDA 13 driver required):
+```bash
+python3 -m venv ~/vagen_src/venv_vagen && source ~/vagen_src/venv_vagen/bin/activate   # or conda, python=3.12
+cd third_party/VAGEN && bash scripts/install.sh && pip install httpx fastapi pytest
+```
+The GPU machine needs `nvcc` and a C compiler at *run* time (flashinfer / triton compile kernels when SGLang
+starts) and to build `causal-conv1d`. Without root:
+`conda install -c nvidia -c conda-forge cuda-toolkit=13.0 gcc_linux-64 gxx_linux-64`, then `CUDA_HOME=$CONDA_PREFIX`.
+
+```bash
+# GPU machine
+MODEL_PATH=Qwen/Qwen2.5-VL-3B-Instruct bash scripts/serve_model.sh
+# simulator machine
+ssh -N -L 30000:localhost:30000 <user>@<gpu-host> &
+python scripts/smoke_test_env.py --mode remote --base_url http://localhost:8000
+```
 
 ## Experiments
 
 ```bash
-# Baseline: SurgicAI pretrained policies (simulator machine, server stopped)
-python3 scripts/eval_surgicai_baseline.py --task approach --algorithm TD3_HER_BC --seeds_from configs/eval_src_approach.yaml
-python3 scripts/eval_surgicai_baseline.py --task approach --algorithm BC         --seeds_from configs/eval_src_approach.yaml
+# Baseline: SurgicAI pretrained policies (simulator machine, env server stopped)
+$SIM_PYTHON scripts/eval_surgicai_baseline.py --task approach --algorithm TD3_HER_BC --seeds_from configs/eval_src_approach.yaml
+$SIM_PYTHON scripts/eval_surgicai_baseline.py --task approach --algorithm BC         --seeds_from configs/eval_src_approach.yaml
 
-# Zero-shot VLM before RL (any OpenAI-compatible backend)
-bash scripts/eval_vagen.sh configs/eval_src_approach.yaml run.backend=openai backends.openai.model=gpt-4.1-mini
-
-# VAGEN training (GPU machine)
-N_GPUS=4 TASK=approach bash scripts/train_ppo_qwen25vl3b.sh
-
-# Trained checkpoint, served with vLLM
-bash scripts/eval_vagen.sh configs/eval_src_approach.yaml run.backend=vllm backends.vllm.model=<served-name>
+# Zero-shot VLM (model served on the GPU machine, tunnel open, env server running)
+MODEL=Qwen/Qwen2.5-VL-3B-Instruct bash scripts/eval_vagen.sh configs/eval_src_approach.yaml envs.0.n_envs=10
 
 # Comparison table
 python3 scripts/compare_results.py \
-  --vagen results/vagen_eval/src_approach=VAGEN-Qwen2.5VL-3B \
+  --vagen results/vagen_eval/src_approach/Qwen_Qwen2.5-VL-3B-Instruct \
   --baseline results/baseline/approach_TD3_HER_BC.json results/baseline/approach_BC.json \
   --out results/compare_approach.csv
 ```
 
-Other subtasks: copy the three `configs/*_approach.yaml` files, change `task:` and start the server with
+Other subtasks: copy the `configs/*_approach.yaml` files, change `task:` and start the server with
 `--task <name>`.
 
 ## Notes / known gaps
@@ -162,3 +168,10 @@ Other subtasks: copy the three `configs/*_approach.yaml` files, change `task:` a
   exact seeds the VLM sees.
 * SurgicAI hard-codes some absolute paths (`/home/jin/...`) in its high-level / multi-task scripts; the subtask
   envs used here do not depend on them.
+* **Status (2026-11-12).** Verified: offline glue tests; scripted-oracle smoke test on the live AMBF scene, both
+  in-process and through VAGEN's `RemoteEnv` HTTP path (approach). **Not yet run:** a real VLM on SRC, the
+  SurgicAI baseline script, the other four subtasks, `compare_results.py` against VAGEN main's output layout.
+* `scripts/train_ppo_qwen25vl3b.sh` and `configs/train_*.yaml` / `val_*.yaml` still target the old `vagen-lite`
+  trainer and need porting to VAGEN main (`vagen.training.main`) before any RL training.
+* ROS 2: raw 640x480 camera frames (0.9 MB) are sometimes never delivered to a client process, so the camera
+  reads the `/compressed` topic. Without ADF 18 (`light_frame.yaml`) the rendered images are almost black.

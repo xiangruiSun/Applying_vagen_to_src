@@ -1,14 +1,20 @@
 """
-Grab RGB frames from the AMBF stereo cameras over ROS 1.
+Grab RGB frames from the AMBF stereo cameras over ROS (1, or 2 via the rospy shim).
 
 AMBF publishes `sensor_msgs/Image` on /ambf/env/cameras/<name>/ImageData when
 the world file has `publish image: True` (SRC's ADF/world/world_stereo.yaml
 does this for cameraL / cameraR). The ROS node itself is initialised by the
 AMBF client that SurgicAI's env creates, so we only subscribe here.
+
+A topic ending in ``/compressed`` is read as ``sensor_msgs/CompressedImage``
+(AMBF publishes it next to the raw one). That is the default: on ROS 2 the raw
+0.9 MB frames are fragmented by DDS and some client processes never receive a
+single one, while the small compressed messages always arrive.
 """
 
 from __future__ import annotations
 
+import io
 import threading
 import time
 from typing import Optional, Tuple
@@ -20,12 +26,12 @@ from PIL import Image
 class RosCamera:
     def __init__(
         self,
-        topic: str = "/ambf/env/cameras/cameraL/ImageData",
+        topic: str = "/ambf/env/cameras/cameraL/ImageData/compressed",
         resize: Optional[Tuple[int, int]] = (448, 336),
         flip_vertical: bool = False,
     ):
         import rospy
-        from sensor_msgs.msg import Image as ImageMsg
+        from sensor_msgs.msg import CompressedImage, Image as ImageMsg
 
         self.topic = topic
         self.resize = tuple(resize) if resize else None
@@ -33,7 +39,9 @@ class RosCamera:
         self._lock = threading.Lock()
         self._latest = None
         self._stamp = 0.0
-        self._sub = rospy.Subscriber(topic, ImageMsg, self._cb, queue_size=1, buff_size=2 ** 24)
+        self.compressed = topic.rstrip("/").endswith("/compressed")
+        msg_type = CompressedImage if self.compressed else ImageMsg
+        self._sub = rospy.Subscriber(topic, msg_type, self._cb, queue_size=1, buff_size=2 ** 24)
 
     def _cb(self, msg) -> None:
         with self._lock:
@@ -56,6 +64,11 @@ class RosCamera:
             time.sleep(0.01)
 
     def _to_pil(self, msg) -> Image.Image:
+        if self.compressed:
+            img = Image.open(io.BytesIO(bytes(msg.data))).convert("RGB")
+            if self.flip_vertical:
+                img = img.transpose(Image.FLIP_TOP_BOTTOM)
+            return img.resize(self.resize, Image.BILINEAR) if self.resize else img
         channels = {"rgb8": 3, "bgr8": 3, "rgba8": 4, "bgra8": 4}.get(msg.encoding)
         if channels is None:
             raise ValueError(f"Unsupported image encoding {msg.encoding!r} on {self.topic}")

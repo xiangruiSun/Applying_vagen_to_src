@@ -1,4 +1,4 @@
-# Simulator side (Python 3.8, ROS Noetic). AMBF / ambf_client, PyKDL and rospy
+# Simulator side (ROS 2 Jazzy: ~/venv_surgicai with system site-packages; or ROS 1 Noetic).
 # come from the AMBF + ROS install; surgical_robotics_challenge from
 # third_party/surgical_robotics_challenge_old/scripts (pip install -e .).
 numpy

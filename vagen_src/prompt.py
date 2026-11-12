@@ -12,10 +12,10 @@ _FORMAT_INSTRUCTIONS = {
         "<think>...</think><answer>{action_example}</answer>"
     ),
     "wm": (
-        "You need to describe your observation, think, give your answer, then predict "
-        "what you will see next. Respond in this format:\n"
-        "<observation>...</observation><think>...</think>"
-        "<answer>{action_example}</answer><prediction>...</prediction>"
+        "Describe your perception, explain your reasoning, predict the next state, and "
+        "then give the action. Respond in this exact order:\n"
+        "<perception>...</perception><reasoning>...</reasoning>"
+        "<prediction>...</prediction><answer>{action_example}</answer>"
     ),
 }
 

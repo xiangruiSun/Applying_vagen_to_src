@@ -43,7 +43,7 @@ class SRCSim:
         trans_error: float = 0.5,
         angle_error: float = 30.0,
         max_low_level_steps: int = 300,
-        camera_topic: Optional[str] = "/ambf/env/cameras/cameraL/ImageData",
+        camera_topic: Optional[str] = "/ambf/env/cameras/cameraL/ImageData/compressed",
         image_size: Tuple[int, int] = (448, 336),
         flip_image: bool = False,
     ):
@@ -76,6 +76,9 @@ class SRCSim:
             from .camera import RosCamera
 
             self.camera = RosCamera(camera_topic, resize=image_size, flip_vertical=flip_image)
+            # ROS 2 discovery of a new subscription can take several seconds on a
+            # scene with 100+ nodes; block here instead of timing out in the first reset.
+            self.camera.grab(timeout=60.0)
 
         self.executor = ThreadPoolExecutor(max_workers=1, thread_name_prefix=f"src-{self.task}")
         self._reset_counters()
