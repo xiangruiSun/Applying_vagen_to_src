@@ -85,7 +85,7 @@ vagen_src/                 glue package
   sim.py                   SRCSim: SurgicAI env + primitive execution + metrics
   src_env.py               SRCEnv: VAGEN GymImageEnv
   handler.py, serve.py     VAGEN remote env server
-configs/                   VAGEN train / val / eval specs (approach subtask)
+configs/                   VAGEN train / val / eval specs (approach subtask; *_text = text-only observation)
 scripts/
   sim_env.sh               ROS 2 environment for the simulator side (sourced by the others)
   launch_sim.sh            AMBF with the old SRC scene (SurgicAI's launch flags + light frame)
@@ -95,7 +95,7 @@ scripts/
   eval_vagen.sh            VAGEN evaluation against a served model
   eval_surgicai_baseline.py  SurgicAI pretrained policies on the same seeds
   compare_results.py       results table
-  train_ppo_qwen25vl3b.sh  VAGEN PPO training (NOT yet ported to VAGEN main, see known gaps)
+  train_grpo.sh            VAGEN RL training (trajectory_grpo, one 24 GB GPU; see notes)
 tests/test_fake_sim.py     offline test of the glue with a fake SurgicAI env
 ```
 
@@ -149,6 +149,10 @@ $SIM_PYTHON scripts/eval_surgicai_baseline.py --task approach --algorithm BC    
 # Zero-shot VLM (model served on the GPU machine, tunnel open, env server running)
 MODEL=Qwen/Qwen2.5-VL-3B-Instruct bash scripts/eval_vagen.sh configs/eval_src_approach.yaml envs.0.n_envs=10
 
+# RL training (GPU machine; env server reachable at the config's base_urls, e.g. via
+#   ssh -N -R 8000:localhost:8000 <user>@<gpu-host>   from the simulator machine)
+VAGEN_DIR=/path/to/VAGEN LR=2e-5 TOTAL_STEPS=60 bash scripts/train_grpo.sh trainer.test_freq=10 trainer.save_freq=20
+
 # Comparison table
 python3 scripts/compare_results.py \
   --vagen results/vagen_eval/src_approach/Qwen_Qwen2.5-VL-3B-Instruct \
@@ -168,10 +172,23 @@ Other subtasks: copy the `configs/*_approach.yaml` files, change `task:` and sta
   exact seeds the VLM sees.
 * SurgicAI hard-codes some absolute paths (`/home/jin/...`) in its high-level / multi-task scripts; the subtask
   envs used here do not depend on them.
-* **Status (2026-11-12).** Verified: offline glue tests; scripted-oracle smoke test on the live AMBF scene, both
-  in-process and through VAGEN's `RemoteEnv` HTTP path (approach). **Not yet run:** a real VLM on SRC, the
-  SurgicAI baseline script, the other four subtasks, `compare_results.py` against VAGEN main's output layout.
-* `scripts/train_ppo_qwen25vl3b.sh` and `configs/train_*.yaml` / `val_*.yaml` still target the old `vagen-lite`
-  trainer and need porting to VAGEN main (`vagen.training.main`) before any RL training.
+* **Status (2026-11-13).** Verified: offline glue tests; scripted-oracle smoke test on the live AMBF scene
+  (in-process and through `RemoteEnv`); zero-shot VLM evaluation on approach; one full RL training step
+  (rollout on the live scene + update) with `scripts/train_grpo.sh`. **Not yet run:** the SurgicAI baseline
+  script, the other four subtasks, `compare_results.py` against VAGEN main's output layout. A 60-step training
+  run was started on 2026-11-13; no trained-model result yet.
+* **Zero-shot Qwen2.5-VL-3B on approach: 0/10** (seeds 20000-20009, 12 turns each; position error never
+  shrank, 31-42 mm at start vs 35-140 mm at the end). The model answers a template (`move(10, 0, 0)`, early
+  `gripper(close)`, `stop`, empty answers) instead of using the pose numbers. A task-specific system prompt
+  with the explicit offset rule did not fix single-step answers either. The same model scores 24/128 (18.75%)
+  on VAGEN's stock Sokoban evaluation.
+* **Training on one 24 GB GPU.** `scripts/train_grpo.sh` runs `trajectory_grpo` + `no_concat` with
+  `Qwen/Qwen3-0.6B` on the text observation (`configs/*_src_approach_text.yaml`), full fine-tune. Qwen2.5-VL-3B
+  does not fit with this stack (rollout engine + training copy exceed 24 GB at every
+  `gpu_memory_utilization` tried), and LoRA with verl's SGLang rollout failed in three places; details are in
+  the script's comments. Measured on the smoke step: ~27 s per 8-turn episode, one simulator, so a step costs
+  about `train_batch_size * rollout.n * 27 s`.
+* AMBF needs ~3 minutes to load the scene; start `serve_sim.sh` after that or it times out waiting for the
+  first camera frame.
 * ROS 2: raw 640x480 camera frames (0.9 MB) are sometimes never delivered to a client process, so the camera
   reads the `/compressed` topic. Without ADF 18 (`light_frame.yaml`) the rendered images are almost black.

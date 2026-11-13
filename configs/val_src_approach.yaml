@@ -13,6 +13,7 @@ envs:
       task: approach
       render_mode: vision
       prompt_format: wm
+      strict_format: false
       max_actions_per_step: 3
       action_sep: "|"
       max_move_mm: 20
