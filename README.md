@@ -22,6 +22,79 @@ git clone --recursive https://github.com/xiangruiSun/Applying_vagen_to_src.git
 git submodule update --init --recursive
 ```
 
+## Status and how to continue on a new machine (2026-11-25)
+
+**Where the work stands**
+
+- Zero-shot Qwen2.5-VL-3B on `approach`: 0/10. The task needs training.
+- RL training (GRPO, `scripts/train_grpo.sh`) runs end to end with Qwen3-0.6B on text
+  observations. Run 1 (long WM prompt, RTX 3090) reached a rising score but no success in
+  its first 8 steps; its final validation was never read back.
+- New on 2026-11-25, verified in the simulator but **not yet trained**: the compact prompt,
+  expert retrieval and expert start described [below](#compact-prompt-expert-retrieval-expert-start-2026-11-25).
+- **Next step:** train `VARIANT=compact` (baseline, no expert hint), then `VARIANT=rag`, and
+  compare validation success. Then try a larger text model (Qwen3-1.7B) if memory allows.
+- **GPU memory:** Qwen3-0.6B used ~14.5 GB on a 24 GB RTX 3090 (`GPU_MEM=0.5`). It does not
+  fit an 8 GB card: the SGLang rollout engine needs `GPU_MEM` >= ~0.33 of 8 GB and the
+  actor update then runs out of memory. Qwen2.5-VL-3B does not fit 24 GB. Plan for >= 16 GB.
+- **Open question:** SurgicAI's approach expert trajectories do not fit this scene (replayed
+  verbatim they end 29 mm / 97 deg from the needle), so only the arm start is matched.
+
+**One machine with a GPU, from scratch** (Ubuntu 24.04, ROS 2 Jazzy, NVIDIA driver with CUDA 13)
+
+```bash
+# 0. system packages
+sudo apt install ros-jazzy-desktop python3-venv python3-pykdl ros-jazzy-python-orocos-kdl-vendor \
+     ros-jazzy-cv-bridge ros-jazzy-image-transport-plugins libasound2-dev xorg-dev libusb-1.0-0-dev \
+     libyaml-cpp-dev libboost-all-dev
+
+# 1. AMBF 3.0 (the commit the SurgicAI ROS 2 fork was tested with)
+mkdir -p ~/ros_ambf_ws/src && cd ~/ros_ambf_ws/src
+git clone -b ambf-3.0 https://github.com/WPI-AIM/ambf.git && git -C ambf checkout da2fd987
+cd ~/ros_ambf_ws && source /opt/ros/jazzy/setup.bash && colcon build --cmake-args -DCMAKE_BUILD_TYPE=Release
+
+# 2. this repo with SurgicAI (old SRC scene + expert trajectories) and VAGEN (+ verl)
+mkdir -p ~/vagen_src && cd ~/vagen_src
+git clone --recursive https://github.com/xiangruiSun/Applying_vagen_to_src.git && cd Applying_vagen_to_src
+
+# 3. simulator-side Python (system site-packages for rclpy / PyKDL)
+python3 -m venv --system-site-packages ~/vagen_src/venv_sim
+~/vagen_src/venv_sim/bin/pip install torch --index-url https://download.pytorch.org/whl/cpu
+~/vagen_src/venv_sim/bin/pip install -r requirements-sim.txt
+~/vagen_src/venv_sim/bin/python -m pytest tests -q           # 15 offline tests, no simulator needed
+
+# 4. training-side Python (VAGEN main + verl + SGLang; needs nvcc and gcc at run time)
+python3 -m venv ~/vagen_src/venv_vagen && source ~/vagen_src/venv_vagen/bin/activate
+(cd third_party/VAGEN && bash scripts/install.sh) && pip install httpx fastapi pytest
+
+# 5. simulator: AMBF window first, wait ~3 min for the scene, then the env server
+bash scripts/launch_sim.sh                                              # terminal 1
+bash scripts/serve_sim.sh --task approach --port 8000 --camera_topic "" # terminal 2 (text-only)
+
+# 6. check without any model: both should report 16/16
+python scripts/eval_scripted.py --policy offset --seeds 10000 10015
+python scripts/eval_scripted.py --policy rag    --seeds 10000 10015
+
+# 7. train (terminal 3, venv_vagen active). Baseline first, then with the expert hint.
+VAGEN_DIR=$PWD/third_party/VAGEN VARIANT=compact LR=2e-5 TOTAL_STEPS=60 bash scripts/train_grpo.sh
+VAGEN_DIR=$PWD/third_party/VAGEN VARIANT=rag     LR=2e-5 TOTAL_STEPS=60 bash scripts/train_grpo.sh
+# validation success every 10 steps:
+grep -o "step:[0-9]* .*" exps/vagen_src/*/run.log | tr ' ' '\n' | grep -E "^step:|val.*success"
+```
+
+Things that cost time before:
+
+- `ambf_simulator -g 0` (headless) segfaults with this scene; keep the window, or use Xvfb as
+  `docker/run_sim.sh` does (`docker/Dockerfile.sim` builds the whole simulator side in one image).
+- Start the env server only after the scene has loaded (~3 min); earlier it crashes or hangs.
+- One simulator runs one episode at a time, so a training step of `BATCH * ROLLOUT_N` (4 x 4)
+  episodes takes minutes. Do not let the machine suspend during a run.
+- If the simulator and the GPU are on different machines, open
+  `ssh -N -R 8000:localhost:8000 <gpu-host>` from the simulator machine and run step 7 there.
+- `GPU_MEM` is SGLang's share of the whole card, training copy included; do not set
+  `PYTORCH_CUDA_ALLOC_CONF=expandable_segments` (SGLang refuses to start).
+- LoRA with verl's SGLang rollout is broken in this stack; the script fine-tunes all weights.
+
 ## How it fits together
 
 ```
@@ -162,6 +235,45 @@ python3 scripts/compare_results.py \
 
 Other subtasks: copy the `configs/*_approach.yaml` files, change `task:` and start the server with
 `--task <name>`.
+
+## Compact prompt, expert retrieval, expert start (2026-11-25)
+
+Four changes aimed at making a small Qwen model trainable on `approach`:
+
+1. **Angles are roll/pitch/yaw, never quaternions.** SurgicAI's state is already
+   `(x, y, z, roll, pitch, yaw, jaw)`; every pose and offset the model sees is six numbers
+   in mm / deg (asserted in `tests/test_fake_sim.py`).
+2. **Compact prompt** (`prompt_format: compact`). The observation is the offset to the
+   target (target minus gripper) -- the number an action consumes -- and the reply is the
+   action alone: `<answer>move(..)|rotate(..)|gripper(close)</answer>`. With the
+   `no_concat` harness each turn is its own conversation, so the only part of a reply that
+   reaches the next turn is the executed `<answer>`, echoed as `Last action:`. Per turn
+   (Qwen tokenizer): system 445 -> 316, observation 286 -> 114, reply ~154 -> 42 tokens.
+3. **Expert retrieval** (`rag_hint: true`, `vagen_src/expert_rag.py`). SurgicAI's expert
+   trajectories (`RL/Expert_traj/<Task>/all_episodes_merged.pkl`, 50 episodes per task)
+   are indexed by offset-to-goal. Each turn the nearest expert state is looked up and the
+   motion that reaches the expert's state `rag_lookahead` (15) low-level steps later is
+   shown as `Expert hint: ...`. `scripts/eval_scripted.py` runs the hint, or plain offset
+   cancelling, as a policy without any model:
+
+   | policy (approach, old SRC scene) | success | turns | low-level steps |
+   |---|---|---|---|
+   | expert hint, random needle (seeds 10000-10015) | 16/16 | 2.9 | 71 |
+   | expert hint, expert start | 8/8 | 3.0 | 69 |
+   | cancel the offset, random needle | 16/16 | 2.0 | 61 |
+
+4. **Expert start** (`expert_start: true`). Every episode starts with the arm at the
+   expert demonstrations' start pose (exact: SurgicAI's `init_psm2`) and the needle at its
+   nominal pose with SurgicAI's needle noise off. The needle is *not* where it was in the
+   demonstrations: their recorded target is 27 mm / 112 deg from the target of a needle
+   lying on the phantom in the old SRC scene, and the needle pose that would reproduce it
+   is 10 mm above the phantom and tilted ~80 deg, so the demonstrations were recorded in
+   another scene setup. The gap is returned in the reset info (`expert_start_error`);
+   `expert_start_check_target: true` turns it into an error. Retrieval is unaffected
+   because it works on goal-relative offsets.
+
+Training: `VARIANT=rag bash scripts/train_grpo.sh` (or `VARIANT=compact` for no hint),
+configs `configs/{train,val}_src_approach_text_{rag,compact}.yaml`.
 
 ## Notes / known gaps
 

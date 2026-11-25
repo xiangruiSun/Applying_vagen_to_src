@@ -1,0 +1,30 @@
+# Compact prompt (no expert hint), text-only, starting where the expert demonstrations start.
+#   observation: "Offset: position (..) mm, orientation (roll, pitch, yaw) deg, jaw open"
+#   reply:       <answer>move(..)|rotate(..)|gripper(close)</answer>
+# Start the env server first:  bash scripts/serve_sim.sh --task approach --port 8000 --camera_topic ""
+envs:
+  - name: RemoteEnv
+    n_envs: 16
+    data_source: src_approach
+    seed: [10000, 10015, 1]
+    max_turns: 6
+    response_length_per_turn: 64
+    config:
+      base_urls: "http://localhost:8000"
+      timeout: 600
+      retries: 6
+      task: approach
+      render_mode: text
+      prompt_format: compact
+      strict_format: false
+      max_actions_per_step: 3
+      action_sep: "|"
+      max_move_mm: 20
+      max_rotate_deg: 30
+      expert_start: true
+      rag_hint: false
+      rag_lookahead: 15
+      format_reward: 0.1
+      progress_reward_per_mm: 0.05
+      progress_reward_per_deg: 0.02
+      success_reward: 10.0

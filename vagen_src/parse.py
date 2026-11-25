@@ -5,6 +5,7 @@ Response formats (VAGEN's shared protocol, vagen/envs/_common/response_format.py
   - free_think: <think>...</think><answer>...</answer>
   - wm:         <perception>...</perception><reasoning>...</reasoning>
                 <prediction>...</prediction><answer>...</answer>
+  - compact:    <answer>...</answer>            (the action alone, see prompt.py)
 
 Mid-level primitives inside <answer>, separated by `action_sep`:
   move(dx, dy, dz)            translate the active gripper, millimetres, robot base frame
@@ -21,7 +22,10 @@ import re
 from dataclasses import dataclass
 from typing import Any, Dict, List, Optional, Tuple
 
-VALID_FORMATS = ["free_think", "wm"]
+VALID_FORMATS = ["free_think", "wm", "compact"]
+
+# A thinking chat template may leave an empty block in front of the answer.
+_EMPTY_THINK_RE = re.compile(r"^\s*<think>\s*</think>\s*", re.IGNORECASE)
 
 _PRIMITIVE_RE = re.compile(r"^\s*([a-zA-Z_]+)\s*\((.*)\)\s*$", re.DOTALL)
 
@@ -53,6 +57,7 @@ def parse_response(
     """
     from vagen.envs._common.response_format import (
         action_count_within_limit,
+        parse_answer_sections,
         parse_free_think_sections,
         parse_wm_sections,
         split_actions,
@@ -62,6 +67,8 @@ def parse_response(
         sec = parse_wm_sections(response)
     elif prompt_format == "free_think":
         sec = parse_free_think_sections(response)
+    elif prompt_format == "compact":
+        sec = parse_answer_sections(_EMPTY_THINK_RE.sub("", response))
     else:
         raise ValueError(f"Unknown prompt_format: {prompt_format}. Valid: {VALID_FORMATS}")
 

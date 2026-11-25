@@ -1,0 +1,24 @@
+# Simulator side in one image: ROS 2 Jazzy + AMBF 3.0 + the Python env for vagen_src.serve.
+# For running the SRC environment next to the trainer on a machine without ROS / sudo.
+# The repo itself is bind-mounted at /repo (see docker/run_sim.sh), not baked in.
+#   docker build -t vagen_src_sim -f docker/Dockerfile.sim docker
+FROM osrf/ros:jazzy-desktop
+ENV DEBIAN_FRONTEND=noninteractive
+RUN apt-get update && apt-get install -y --no-install-recommends \
+      git build-essential cmake python3-venv python3-pip python3-pykdl xvfb iproute2 curl \
+      libasound2-dev libgl1-mesa-dev libgl1-mesa-dri xorg-dev libusb-1.0-0-dev libyaml-cpp-dev libboost-all-dev \
+      ros-jazzy-cv-bridge ros-jazzy-image-transport ros-jazzy-image-transport-plugins \
+      ros-jazzy-python-orocos-kdl-vendor ros-jazzy-tf2 ros-jazzy-tf2-ros \
+    && rm -rf /var/lib/apt/lists/*
+# AMBF 3.0, the commit the SurgicAI ROS 2 fork was tested with.
+RUN mkdir -p /ros_ambf_ws/src && cd /ros_ambf_ws/src \
+    && git clone -b ambf-3.0 https://github.com/WPI-AIM/ambf.git && cd ambf && git checkout da2fd987 \
+    && cd /ros_ambf_ws && . /opt/ros/jazzy/setup.sh \
+    && colcon build --cmake-args -DCMAKE_BUILD_TYPE=Release \
+    && rm -rf build log
+RUN python3 -m venv --system-site-packages /venv_sim \
+    && /venv_sim/bin/pip install --no-cache-dir torch --index-url https://download.pytorch.org/whl/cpu \
+    && /venv_sim/bin/pip install --no-cache-dir "numpy<2" pillow pyyaml "gym==0.26.2" "gymnasium==0.29.1" \
+       "stable-baselines3==2.2.1" fastapi "uvicorn<0.41" httpx pytest
+ENV AMBF_WS=/ros_ambf_ws SIM_PYTHON=/venv_sim/bin/python
+WORKDIR /repo

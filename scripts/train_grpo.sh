@@ -25,8 +25,15 @@ PROJECT_NAME=${PROJECT_NAME:-vagen_src}
 OBS=${OBS:-text}                       # text | vision
 MODEL=${MODEL:-Qwen/Qwen3-0.6B}
 GPU_MEM=${GPU_MEM:-0.5}
-SUFFIX=$([ "$OBS" = text ] && echo _text || echo "")
-EXPERIMENT_NAME=${EXPERIMENT_NAME:-src_${TASK}_${OBS}_grpo_$(basename "$MODEL")}
+# WM_REWARD=1 selects the configs with the world-model (state) reward switched on.
+# VARIANT picks the prompt: compact (offset in, action out) or rag (compact + expert hint);
+# both start every episode at the expert demonstrations' start. Empty = the long WM prompt.
+VARIANT=${VARIANT:-}
+SUFFIX=$([ "$OBS" = text ] && echo _text || echo "")$([ "${WM_REWARD:-0}" = 1 ] && echo _wm || echo "")${VARIANT:+_$VARIANT}
+# The compact prompt is ~330 tokens in and ~40 out per turn; the WM prompt needs 2000 / 800.
+MAX_PROMPT=${MAX_PROMPT:-$([ -n "$VARIANT" ] && echo 700 || echo 2000)}
+MAX_RESPONSE=${MAX_RESPONSE:-$([ -n "$VARIANT" ] && echo 400 || echo 800)}
+EXPERIMENT_NAME=${EXPERIMENT_NAME:-src_${TASK}${SUFFIX}_grpo_$(basename "$MODEL")}
 EXPERIMENT_DIR=${EXPERIMENT_DIR:-$REPO_ROOT/exps/$PROJECT_NAME/$EXPERIMENT_NAME}
 mkdir -p "$EXPERIMENT_DIR"
 
@@ -40,14 +47,19 @@ export PYTHONPATH=$VERL:$V${PYTHONPATH:+:$PYTHONPATH}
 # SGLang's flashinfer compiles kernels at startup (see scripts/serve_model.sh).
 if [ -z "${CUDA_HOME:-}" ] && [ -n "${CONDA_PREFIX:-}" ] && [ -x "$CONDA_PREFIX/bin/nvcc" ]; then
     export CUDA_HOME="$CONDA_PREFIX"
+elif [ -z "${CUDA_HOME:-}" ] && [ -x /usr/local/cuda/bin/nvcc ]; then
+    export CUDA_HOME=/usr/local/cuda      # system toolkit (e.g. the NVIDIA apt packages)
 fi
+[ -n "${CUDA_HOME:-}" ] && export PATH="$CUDA_HOME/bin:$PATH"
 # Inside verl's SGLang actor even /bin/sh needs libcudart.so.13 (a preloaded library
 # pulls it in); without it Triton's `/sbin/ldconfig -p` probe exits 127 and the engine
 # dies while compiling its CUDA graphs. Make the conda toolkit's copy findable and tell
 # Triton where the driver library is so it does not need ldconfig at all.
-if [ -n "${CUDA_HOME:-}" ] && ls "$CUDA_HOME"/lib/libcudart.so.* >/dev/null 2>&1; then
-    export LD_LIBRARY_PATH="$CUDA_HOME/lib${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
-fi
+for libdir in lib lib64; do
+    if [ -n "${CUDA_HOME:-}" ] && ls "$CUDA_HOME/$libdir"/libcudart.so.* >/dev/null 2>&1; then
+        export LD_LIBRARY_PATH="$CUDA_HOME/$libdir${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
+    fi
+done
 if [ -z "${TRITON_LIBCUDA_PATH:-}" ] && [ -e /usr/lib/x86_64-linux-gnu/libcuda.so.1 ]; then
     export TRITON_LIBCUDA_PATH=/usr/lib/x86_64-linux-gnu
 fi
@@ -82,11 +94,11 @@ PYTHONUNBUFFERED=1 python3 -m vagen.training.main \
     critic.model.path="$MODEL" \
     algorithm.adv_estimator=trajectory_grpo \
     trainer.harness=no_concat \
-    data.train_batch_size=4 \
-    actor_rollout_ref.rollout.n=4 \
-    actor_rollout_ref.actor.ppo_mini_batch_size=4 \
-    data.max_prompt_length=2000 \
-    data.max_response_length=800 \
+    data.train_batch_size=${BATCH:-4} \
+    actor_rollout_ref.rollout.n=${ROLLOUT_N:-4} \
+    actor_rollout_ref.actor.ppo_mini_batch_size=${BATCH:-4} \
+    data.max_prompt_length="$MAX_PROMPT" \
+    data.max_response_length="$MAX_RESPONSE" \
     actor_rollout_ref.actor.optim.lr="$LR" \
     "${LORA[@]}" \
     actor_rollout_ref.actor.fsdp_config.model_dtype=bf16 \
@@ -95,15 +107,15 @@ PYTHONUNBUFFERED=1 python3 -m vagen.training.main \
     actor_rollout_ref.rollout.tensor_model_parallel_size=1 \
     actor_rollout_ref.rollout.agent.num_workers=1 \
     actor_rollout_ref.rollout.gpu_memory_utilization="$GPU_MEM" \
-    actor_rollout_ref.rollout.max_num_batched_tokens=6000 \
+    actor_rollout_ref.rollout.max_num_batched_tokens=${MAX_BATCHED_TOKENS:-6000} \
     actor_rollout_ref.rollout.enforce_eager=True \
     actor_rollout_ref.rollout.enable_chunked_prefill=True \
     trainer.n_gpus_per_node=1 \
     trainer.nnodes=1 \
     trainer.critic_warmup=0 \
     trainer.logger="['console']" \
-    trainer.save_freq=20 \
-    trainer.test_freq=10 \
+    trainer.save_freq=${SAVE_FREQ:-20} \
+    trainer.test_freq=${TEST_FREQ:-10} \
     trainer.total_training_steps=${TOTAL_STEPS:-100} \
     trainer.project_name="$PROJECT_NAME" \
     trainer.experiment_name="$EXPERIMENT_NAME" \

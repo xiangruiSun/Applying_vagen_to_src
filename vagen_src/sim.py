@@ -81,6 +81,7 @@ class SRCSim:
             self.camera.grab(timeout=60.0)
 
         self.executor = ThreadPoolExecutor(max_workers=1, thread_name_prefix=f"src-{self.task}")
+        self._random_range: Optional[np.ndarray] = None  # SurgicAI's own needle noise, saved on first reset
         self._reset_counters()
 
     # ------------------------------------------------------------------
@@ -117,14 +118,34 @@ class SRCSim:
     # Core operations
     # ------------------------------------------------------------------
 
-    def reset(self, seed: int) -> Dict[str, Any]:
+    def reset(self, seed: int, expert_start: bool = False) -> Dict[str, Any]:
+        """Start an episode.
+
+        expert_start=True starts where SurgicAI's expert demonstrations start: the arm at
+        the env's initial pose (which every reset already does) and the needle at its
+        nominal pose, i.e. SurgicAI's needle randomisation switched off for this reset.
+        `start_error()` reports how far the result is from a recorded expert start.
+        """
         # SurgicAI's Approach/Place envs draw needle noise from the global
         # numpy RNG and ignore reset(seed=...), so seed it here.
         np.random.seed(seed % (2 ** 32))
         random.seed(seed)
+        if self._random_range is None:
+            self._random_range = np.array(self.env.random_range, dtype=np.float32, copy=True)
+        self.env.random_range = np.zeros_like(self._random_range) if expert_start else self._random_range.copy()
         self.env.reset(seed=seed)
         self._reset_counters()
         return self.state()
+
+    def start_error(self, expert_first_state: Dict[str, Any]) -> Dict[str, float]:
+        """Largest per-axis gap between the current state and an expert start (mm, deg)."""
+        st = self.state()
+        gap = {}
+        for key in ("gripper_pose", "target_pose"):
+            diff = np.abs(np.asarray(st[key]) - np.asarray(expert_first_state[key]))
+            gap[f"{key}_mm"] = float(diff[0:3].max())
+            gap[f"{key}_deg"] = float(diff[3:6].max())
+        return gap
 
     def low_level_step(self, action: np.ndarray) -> bool:
         """One SurgicAI env step. Returns True if the subtask succeeded."""
