@@ -1,0 +1,7 @@
+method,episodes,success,success_rate,traj_length_mm,traj_length_std,time_cost_steps,time_cost_std,vlm_turns
+SurgicAI BC,100,100,1.0,87.1,16.4,57.3,10.2,
+SurgicAI TD3_HER_BC,100,100,1.0,104.0,44.0,73.9,32.2,
+"Qwen3-0.6B untrained, compact",100,49,0.49,37.8,14.6,62.4,16.0,1.92
+Qwen3-0.6B trained compact (step 30),100,100,1.0,35.1,5.2,91.0,23.8,4.48
+"Qwen3-0.6B untrained, rag",100,100,1.0,35.5,7.3,61.5,14.1,2.06
+Qwen3-0.6B trained rag (step 60),100,100,1.0,35.9,6.2,92.9,25.1,4.76

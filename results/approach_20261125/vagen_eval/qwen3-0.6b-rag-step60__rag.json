@@ -1,0 +1,1008 @@
+{
+ "method": "qwen3-0.6b-rag-step60",
+ "prompt": "rag",
+ "config": "configs/eval_src_approach_text_rag.yaml",
+ "harness": "no_concat",
+ "episodes": [
+  {
+   "seed": 20000,
+   "success": true,
+   "num_turns": 2,
+   "low_level_steps": 50,
+   "traj_length_mm": 28.577089309692383,
+   "trans_error_mm": 2.3609587408410473,
+   "angle_error_deg": 30.038637479801814,
+   "cumulative_reward": 12.91924965136876
+  },
+  {
+   "seed": 20001,
+   "success": true,
+   "num_turns": 6,
+   "low_level_steps": 109,
+   "traj_length_mm": 42.6487193107605,
+   "trans_error_mm": 0.06446056625682167,
+   "angle_error_deg": 0.041739949919126294,
+   "cumulative_reward": 13.947722971678957
+  },
+  {
+   "seed": 20002,
+   "success": true,
+   "num_turns": 6,
+   "low_level_steps": 104,
+   "traj_length_mm": 36.648887395858765,
+   "trans_error_mm": 0.038827692378546885,
+   "angle_error_deg": 0.04129349709166776,
+   "cumulative_reward": 14.05272824760856
+  },
+  {
+   "seed": 20003,
+   "success": true,
+   "num_turns": 6,
+   "low_level_steps": 115,
+   "traj_length_mm": 42.08592081069946,
+   "trans_error_mm": 0.038127002428648055,
+   "angle_error_deg": 0.055271654835364156,
+   "cumulative_reward": 14.580374771140672
+  },
+  {
+   "seed": 20004,
+   "success": true,
+   "num_turns": 6,
+   "low_level_steps": 107,
+   "traj_length_mm": 36.633851528167725,
+   "trans_error_mm": 0.045616855783182475,
+   "angle_error_deg": 0.04507340862313116,
+   "cumulative_reward": 14.116072100749015
+  },
+  {
+   "seed": 20005,
+   "success": true,
+   "num_turns": 6,
+   "low_level_steps": 116,
+   "traj_length_mm": 45.749746561050415,
+   "trans_error_mm": 0.06580343801607288,
+   "angle_error_deg": 0.0445509548445612,
+   "cumulative_reward": 14.678821001149768
+  },
+  {
+   "seed": 20006,
+   "success": true,
+   "num_turns": 6,
+   "low_level_steps": 106,
+   "traj_length_mm": 38.30149757862091,
+   "trans_error_mm": 0.06160289364988576,
+   "angle_error_deg": 0.03747850270803306,
+   "cumulative_reward": 14.079517073700442
+  },
+  {
+   "seed": 20007,
+   "success": true,
+   "num_turns": 2,
+   "low_level_steps": 47,
+   "traj_length_mm": 28.579885959625244,
+   "trans_error_mm": 2.623308901285464,
+   "angle_error_deg": 32.207924162575644,
+   "cumulative_reward": 12.68999355989158
+  },
+  {
+   "seed": 20008,
+   "success": true,
+   "num_turns": 4,
+   "low_level_steps": 98,
+   "traj_length_mm": 32.624579071998596,
+   "trans_error_mm": 0.05105495405258656,
+   "angle_error_deg": 0.06598184644942799,
+   "cumulative_reward": 13.378564990304142
+  },
+  {
+   "seed": 20009,
+   "success": true,
+   "num_turns": 6,
+   "low_level_steps": 111,
+   "traj_length_mm": 38.684282183647156,
+   "trans_error_mm": 0.04693858739397285,
+   "angle_error_deg": 0.07108003463705506,
+   "cumulative_reward": 14.295361231770462
+  },
+  {
+   "seed": 20010,
+   "success": true,
+   "num_turns": 6,
+   "low_level_steps": 98,
+   "traj_length_mm": 33.73923796415329,
+   "trans_error_mm": 0.03306747239525544,
+   "angle_error_deg": 0.04742180714849618,
+   "cumulative_reward": 13.749504618013681
+  },
+  {
+   "seed": 20011,
+   "success": true,
+   "num_turns": 6,
+   "low_level_steps": 104,
+   "traj_length_mm": 33.9341881275177,
+   "trans_error_mm": 0.03613640804932033,
+   "angle_error_deg": 0.017619619869585844,
+   "cumulative_reward": 14.115484856405152
+  },
+  {
+   "seed": 20012,
+   "success": true,
+   "num_turns": 6,
+   "low_level_steps": 102,
+   "traj_length_mm": 34.92449903488159,
+   "trans_error_mm": 0.04331333314793119,
+   "angle_error_deg": 0.040345294499531704,
+   "cumulative_reward": 13.93242178314735
+  },
+  {
+   "seed": 20013,
+   "success": true,
+   "num_turns": 6,
+   "low_level_steps": 101,
+   "traj_length_mm": 34.71645301580429,
+   "trans_error_mm": 0.05698598831461133,
+   "angle_error_deg": 0.0492117423803411,
+   "cumulative_reward": 13.763407854089987
+  },
+  {
+   "seed": 20014,
+   "success": true,
+   "num_turns": 6,
+   "low_level_steps": 98,
+   "traj_length_mm": 34.72331142425537,
+   "trans_error_mm": 0.03277274632771461,
+   "angle_error_deg": 0.05602739895577682,
+   "cumulative_reward": 13.7067141871216
+  },
+  {
+   "seed": 20015,
+   "success": true,
+   "num_turns": 6,
+   "low_level_steps": 114,
+   "traj_length_mm": 45.623791217803955,
+   "trans_error_mm": 0.05151656639860604,
+   "angle_error_deg": 0.04714742246081472,
+   "cumulative_reward": 14.385924784036355
+  },
+  {
+   "seed": 20016,
+   "success": true,
+   "num_turns": 6,
+   "low_level_steps": 107,
+   "traj_length_mm": 42.08103156089783,
+   "trans_error_mm": 0.040332199805898306,
+   "angle_error_deg": 0.04060896940821825,
+   "cumulative_reward": 13.93469495234679
+  },
+  {
+   "seed": 20017,
+   "success": true,
+   "num_turns": 2,
+   "low_level_steps": 46,
+   "traj_length_mm": 27.72670030593872,
+   "trans_error_mm": 4.671419661787407,
+   "angle_error_deg": 29.92402677995668,
+   "cumulative_reward": 12.23358083217623
+  },
+  {
+   "seed": 20018,
+   "success": true,
+   "num_turns": 6,
+   "low_level_steps": 115,
+   "traj_length_mm": 49.03036308288574,
+   "trans_error_mm": 0.05638088449628317,
+   "angle_error_deg": 0.05253022304321809,
+   "cumulative_reward": 13.88520847278613
+  },
+  {
+   "seed": 20019,
+   "success": true,
+   "num_turns": 6,
+   "low_level_steps": 108,
+   "traj_length_mm": 38.70124751329422,
+   "trans_error_mm": 0.04121615327964494,
+   "angle_error_deg": 0.016610334781645805,
+   "cumulative_reward": 14.143106335500049
+  },
+  {
+   "seed": 20020,
+   "success": true,
+   "num_turns": 6,
+   "low_level_steps": 101,
+   "traj_length_mm": 34.73376625776291,
+   "trans_error_mm": 0.051729986581417205,
+   "angle_error_deg": 0.052620335906320766,
+   "cumulative_reward": 13.726801285569469
+  },
+  {
+   "seed": 20021,
+   "success": true,
+   "num_turns": 2,
+   "low_level_steps": 48,
+   "traj_length_mm": 28.65588903427124,
+   "trans_error_mm": 2.6423460241917924,
+   "angle_error_deg": 35.22202336987215,
+   "cumulative_reward": 12.778574859775972
+  },
+  {
+   "seed": 20022,
+   "success": true,
+   "num_turns": 4,
+   "low_level_steps": 100,
+   "traj_length_mm": 32.74116277694702,
+   "trans_error_mm": 0.04293068456099889,
+   "angle_error_deg": 0.05113507993416583,
+   "cumulative_reward": 13.93877000394359
+  },
+  {
+   "seed": 20023,
+   "success": true,
+   "num_turns": 6,
+   "low_level_steps": 106,
+   "traj_length_mm": 35.79334902763367,
+   "trans_error_mm": 0.06938579930826803,
+   "angle_error_deg": 0.029644459591213583,
+   "cumulative_reward": 14.23046454678231
+  },
+  {
+   "seed": 20024,
+   "success": true,
+   "num_turns": 6,
+   "low_level_steps": 113,
+   "traj_length_mm": 42.056996405124664,
+   "trans_error_mm": 0.05472446782315929,
+   "angle_error_deg": 0.04549495091356839,
+   "cumulative_reward": 14.420170765227594
+  },
+  {
+   "seed": 20025,
+   "success": true,
+   "num_turns": 6,
+   "low_level_steps": 115,
+   "traj_length_mm": 46.90972459316254,
+   "trans_error_mm": 0.024798273711806085,
+   "angle_error_deg": 0.04596674939693153,
+   "cumulative_reward": 14.357422506717338
+  },
+  {
+   "seed": 20026,
+   "success": true,
+   "num_turns": 6,
+   "low_level_steps": 107,
+   "traj_length_mm": 38.04615592956543,
+   "trans_error_mm": 0.04701551543857585,
+   "angle_error_deg": 0.06685663464091682,
+   "cumulative_reward": 14.017938887798547
+  },
+  {
+   "seed": 20027,
+   "success": true,
+   "num_turns": 6,
+   "low_level_steps": 97,
+   "traj_length_mm": 33.9358127117157,
+   "trans_error_mm": 0.05345883864880674,
+   "angle_error_deg": 0.036959261862878755,
+   "cumulative_reward": 13.604702992106638
+  },
+  {
+   "seed": 20028,
+   "success": true,
+   "num_turns": 6,
+   "low_level_steps": 103,
+   "traj_length_mm": 34.679089069366455,
+   "trans_error_mm": 0.02563047971255021,
+   "angle_error_deg": 0.061095611944504066,
+   "cumulative_reward": 14.195546439443405
+  },
+  {
+   "seed": 20029,
+   "success": true,
+   "num_turns": 4,
+   "low_level_steps": 100,
+   "traj_length_mm": 32.304818630218506,
+   "trans_error_mm": 0.033312271985082256,
+   "angle_error_deg": 0.05122298390009864,
+   "cumulative_reward": 13.923189625978928
+  },
+  {
+   "seed": 20030,
+   "success": true,
+   "num_turns": 6,
+   "low_level_steps": 111,
+   "traj_length_mm": 43.10841774940491,
+   "trans_error_mm": 0.01924726022493717,
+   "angle_error_deg": 0.06273568759516339,
+   "cumulative_reward": 14.018140792217498
+  },
+  {
+   "seed": 20031,
+   "success": true,
+   "num_turns": 2,
+   "low_level_steps": 50,
+   "traj_length_mm": 28.141427040100098,
+   "trans_error_mm": 3.199649871478753,
+   "angle_error_deg": 31.451305555770766,
+   "cumulative_reward": 12.913084091809612
+  },
+  {
+   "seed": 20032,
+   "success": true,
+   "num_turns": 6,
+   "low_level_steps": 117,
+   "traj_length_mm": 50.48045635223389,
+   "trans_error_mm": 0.047709618506344705,
+   "angle_error_deg": 0.038377323960224016,
+   "cumulative_reward": 14.165429646595022
+  },
+  {
+   "seed": 20033,
+   "success": true,
+   "num_turns": 4,
+   "low_level_steps": 96,
+   "traj_length_mm": 32.853025794029236,
+   "trans_error_mm": 0.0467767168569091,
+   "angle_error_deg": 0.039491016334955664,
+   "cumulative_reward": 13.34445225056794
+  },
+  {
+   "seed": 20034,
+   "success": true,
+   "num_turns": 4,
+   "low_level_steps": 95,
+   "traj_length_mm": 32.23668313026428,
+   "trans_error_mm": 0.16775716653255557,
+   "angle_error_deg": 0.06767493229728656,
+   "cumulative_reward": 13.72243968358373
+  },
+  {
+   "seed": 20035,
+   "success": true,
+   "num_turns": 4,
+   "low_level_steps": 96,
+   "traj_length_mm": 32.32645893096924,
+   "trans_error_mm": 0.039571718329613176,
+   "angle_error_deg": 0.015889395422165206,
+   "cumulative_reward": 13.706183615669365
+  },
+  {
+   "seed": 20036,
+   "success": true,
+   "num_turns": 2,
+   "low_level_steps": 43,
+   "traj_length_mm": 24.872486472129822,
+   "trans_error_mm": 4.819999954124471,
+   "angle_error_deg": 32.45966805228825,
+   "cumulative_reward": 12.473165195314893
+  },
+  {
+   "seed": 20037,
+   "success": true,
+   "num_turns": 2,
+   "low_level_steps": 51,
+   "traj_length_mm": 28.4128475189209,
+   "trans_error_mm": 4.016804983825953,
+   "angle_error_deg": 31.91313940762022,
+   "cumulative_reward": 12.934067865093292
+  },
+  {
+   "seed": 20038,
+   "success": true,
+   "num_turns": 6,
+   "low_level_steps": 113,
+   "traj_length_mm": 42.83404344320297,
+   "trans_error_mm": 0.04413601523108115,
+   "angle_error_deg": 0.05825298456788616,
+   "cumulative_reward": 13.978590478428618
+  },
+  {
+   "seed": 20039,
+   "success": true,
+   "num_turns": 4,
+   "low_level_steps": 97,
+   "traj_length_mm": 32.93770968914032,
+   "trans_error_mm": 0.034681684632282155,
+   "angle_error_deg": 0.047832613571202276,
+   "cumulative_reward": 13.811311839312053
+  },
+  {
+   "seed": 20040,
+   "success": true,
+   "num_turns": 2,
+   "low_level_steps": 46,
+   "traj_length_mm": 26.56651735305786,
+   "trans_error_mm": 4.089711781951922,
+   "angle_error_deg": 25.616413553736564,
+   "cumulative_reward": 12.396644424157842
+  },
+  {
+   "seed": 20041,
+   "success": true,
+   "num_turns": 2,
+   "low_level_steps": 52,
+   "traj_length_mm": 28.346428871154785,
+   "trans_error_mm": 3.9490294983960794,
+   "angle_error_deg": 31.963030434111406,
+   "cumulative_reward": 12.848268719350171
+  },
+  {
+   "seed": 20042,
+   "success": true,
+   "num_turns": 2,
+   "low_level_steps": 52,
+   "traj_length_mm": 28.52524995803833,
+   "trans_error_mm": 3.853573230096437,
+   "angle_error_deg": 29.35458444119406,
+   "cumulative_reward": 13.111197101312296
+  },
+  {
+   "seed": 20043,
+   "success": true,
+   "num_turns": 2,
+   "low_level_steps": 45,
+   "traj_length_mm": 25.312106728553772,
+   "trans_error_mm": 5.497782541490058,
+   "angle_error_deg": 29.531585360490876,
+   "cumulative_reward": 12.305940731417794
+  },
+  {
+   "seed": 20044,
+   "success": true,
+   "num_turns": 6,
+   "low_level_steps": 103,
+   "traj_length_mm": 34.95654630661011,
+   "trans_error_mm": 0.04510554541246439,
+   "angle_error_deg": 0.0420967677543689,
+   "cumulative_reward": 13.942261691962562
+  },
+  {
+   "seed": 20045,
+   "success": true,
+   "num_turns": 6,
+   "low_level_steps": 110,
+   "traj_length_mm": 40.71837693452835,
+   "trans_error_mm": 0.0459178292383217,
+   "angle_error_deg": 0.05154701185221612,
+   "cumulative_reward": 14.233199655466608
+  },
+  {
+   "seed": 20046,
+   "success": true,
+   "num_turns": 6,
+   "low_level_steps": 105,
+   "traj_length_mm": 36.043488681316376,
+   "trans_error_mm": 0.04665576841877955,
+   "angle_error_deg": 0.04937912989278656,
+   "cumulative_reward": 14.05242886929204
+  },
+  {
+   "seed": 20047,
+   "success": true,
+   "num_turns": 2,
+   "low_level_steps": 44,
+   "traj_length_mm": 25.073197603225708,
+   "trans_error_mm": 4.696736951781742,
+   "angle_error_deg": 26.94642774565328,
+   "cumulative_reward": 12.411549189246923
+  },
+  {
+   "seed": 20048,
+   "success": true,
+   "num_turns": 6,
+   "low_level_steps": 108,
+   "traj_length_mm": 43.88013881444931,
+   "trans_error_mm": 0.06465921982456255,
+   "angle_error_deg": 0.07730394320628542,
+   "cumulative_reward": 13.976440602881475
+  },
+  {
+   "seed": 20049,
+   "success": true,
+   "num_turns": 6,
+   "low_level_steps": 107,
+   "traj_length_mm": 36.07823947817087,
+   "trans_error_mm": 0.06804294526475965,
+   "angle_error_deg": 0.05014790174206204,
+   "cumulative_reward": 14.050104287899021
+  },
+  {
+   "seed": 20050,
+   "success": true,
+   "num_turns": 6,
+   "low_level_steps": 110,
+   "traj_length_mm": 39.127999007701874,
+   "trans_error_mm": 0.06022540406996417,
+   "angle_error_deg": 0.07325291917885704,
+   "cumulative_reward": 13.957198118901557
+  },
+  {
+   "seed": 20051,
+   "success": true,
+   "num_turns": 6,
+   "low_level_steps": 106,
+   "traj_length_mm": 34.444244146347046,
+   "trans_error_mm": 0.03972830930888944,
+   "angle_error_deg": 0.031305703259419816,
+   "cumulative_reward": 14.128590601340571
+  },
+  {
+   "seed": 20052,
+   "success": true,
+   "num_turns": 4,
+   "low_level_steps": 95,
+   "traj_length_mm": 33.19836759567261,
+   "trans_error_mm": 0.05267230369665891,
+   "angle_error_deg": 0.03868552157849077,
+   "cumulative_reward": 13.47435798736918
+  },
+  {
+   "seed": 20053,
+   "success": true,
+   "num_turns": 6,
+   "low_level_steps": 111,
+   "traj_length_mm": 37.45142489671707,
+   "trans_error_mm": 0.0393868114959052,
+   "angle_error_deg": 0.06323350274235566,
+   "cumulative_reward": 14.07364830400361
+  },
+  {
+   "seed": 20054,
+   "success": true,
+   "num_turns": 4,
+   "low_level_steps": 98,
+   "traj_length_mm": 32.14077949523926,
+   "trans_error_mm": 0.04433154093634976,
+   "angle_error_deg": 0.0577447838115747,
+   "cumulative_reward": 13.798158973166744
+  },
+  {
+   "seed": 20055,
+   "success": true,
+   "num_turns": 2,
+   "low_level_steps": 52,
+   "traj_length_mm": 28.385910987854004,
+   "trans_error_mm": 3.571141371224788,
+   "angle_error_deg": 29.642902460462146,
+   "cumulative_reward": 13.075565396453353
+  },
+  {
+   "seed": 20056,
+   "success": true,
+   "num_turns": 6,
+   "low_level_steps": 109,
+   "traj_length_mm": 37.81020373106003,
+   "trans_error_mm": 0.04552235276062196,
+   "angle_error_deg": 0.03511294799461388,
+   "cumulative_reward": 14.142383168665312
+  },
+  {
+   "seed": 20057,
+   "success": true,
+   "num_turns": 6,
+   "low_level_steps": 106,
+   "traj_length_mm": 38.89289474487305,
+   "trans_error_mm": 0.04005481909356317,
+   "angle_error_deg": 0.059845269379544624,
+   "cumulative_reward": 13.715194743294166
+  },
+  {
+   "seed": 20058,
+   "success": true,
+   "num_turns": 4,
+   "low_level_steps": 96,
+   "traj_length_mm": 32.01874303817749,
+   "trans_error_mm": 0.05026154389167348,
+   "angle_error_deg": 0.0441990898166655,
+   "cumulative_reward": 13.847529434401784
+  },
+  {
+   "seed": 20059,
+   "success": true,
+   "num_turns": 4,
+   "low_level_steps": 92,
+   "traj_length_mm": 32.11392784118652,
+   "trans_error_mm": 0.044728768833123364,
+   "angle_error_deg": 0.03840491409413658,
+   "cumulative_reward": 13.169168957313824
+  },
+  {
+   "seed": 20060,
+   "success": true,
+   "num_turns": 6,
+   "low_level_steps": 114,
+   "traj_length_mm": 42.3316148519516,
+   "trans_error_mm": 0.05456530724363523,
+   "angle_error_deg": 0.03239103057334766,
+   "cumulative_reward": 14.603761797785843
+  },
+  {
+   "seed": 20061,
+   "success": true,
+   "num_turns": 6,
+   "low_level_steps": 103,
+   "traj_length_mm": 34.48086146265268,
+   "trans_error_mm": 0.07182517912409314,
+   "angle_error_deg": 0.040308907514709766,
+   "cumulative_reward": 13.889116188575036
+  },
+  {
+   "seed": 20062,
+   "success": true,
+   "num_turns": 6,
+   "low_level_steps": 109,
+   "traj_length_mm": 44.634711265563965,
+   "trans_error_mm": 0.061330123212695466,
+   "angle_error_deg": 0.057071983770790626,
+   "cumulative_reward": 14.003174918445387
+  },
+  {
+   "seed": 20063,
+   "success": true,
+   "num_turns": 2,
+   "low_level_steps": 47,
+   "traj_length_mm": 27.677607536315918,
+   "trans_error_mm": 3.3633522594213483,
+   "angle_error_deg": 32.999923244313194,
+   "cumulative_reward": 12.599257737428157
+  },
+  {
+   "seed": 20064,
+   "success": true,
+   "num_turns": 6,
+   "low_level_steps": 110,
+   "traj_length_mm": 44.17275947332382,
+   "trans_error_mm": 0.051787607183300034,
+   "angle_error_deg": 0.04814726757043804,
+   "cumulative_reward": 13.946983960103514
+  },
+  {
+   "seed": 20065,
+   "success": true,
+   "num_turns": 6,
+   "low_level_steps": 111,
+   "traj_length_mm": 39.66891008615494,
+   "trans_error_mm": 0.05692843735488031,
+   "angle_error_deg": 0.0520883307956442,
+   "cumulative_reward": 14.22208088774788
+  },
+  {
+   "seed": 20066,
+   "success": true,
+   "num_turns": 6,
+   "low_level_steps": 116,
+   "traj_length_mm": 43.551663875579834,
+   "trans_error_mm": 0.0270503020642599,
+   "angle_error_deg": 0.04119029691916804,
+   "cumulative_reward": 14.678378909631215
+  },
+  {
+   "seed": 20067,
+   "success": true,
+   "num_turns": 6,
+   "low_level_steps": 116,
+   "traj_length_mm": 43.44725179672241,
+   "trans_error_mm": 0.03323567957895452,
+   "angle_error_deg": 0.04236740094353222,
+   "cumulative_reward": 14.604892598181692
+  },
+  {
+   "seed": 20068,
+   "success": true,
+   "num_turns": 6,
+   "low_level_steps": 100,
+   "traj_length_mm": 34.216880321502686,
+   "trans_error_mm": 0.04875235549259036,
+   "angle_error_deg": 0.05231048776631994,
+   "cumulative_reward": 13.446911691131824
+  },
+  {
+   "seed": 20069,
+   "success": true,
+   "num_turns": 6,
+   "low_level_steps": 113,
+   "traj_length_mm": 41.25589470565319,
+   "trans_error_mm": 0.05766739217478497,
+   "angle_error_deg": 0.018059730633938113,
+   "cumulative_reward": 14.391551450429056
+  },
+  {
+   "seed": 20070,
+   "success": true,
+   "num_turns": 6,
+   "low_level_steps": 110,
+   "traj_length_mm": 37.88090682029724,
+   "trans_error_mm": 0.04734987953033178,
+   "angle_error_deg": 0.06484489583327901,
+   "cumulative_reward": 14.340456630543036
+  },
+  {
+   "seed": 20071,
+   "success": true,
+   "num_turns": 4,
+   "low_level_steps": 100,
+   "traj_length_mm": 32.56396293640137,
+   "trans_error_mm": 0.06335165286717517,
+   "angle_error_deg": 0.03294166323670362,
+   "cumulative_reward": 13.845381482187753
+  },
+  {
+   "seed": 20072,
+   "success": true,
+   "num_turns": 6,
+   "low_level_steps": 115,
+   "traj_length_mm": 44.061184883117676,
+   "trans_error_mm": 0.02441274401042904,
+   "angle_error_deg": 0.04285740820993196,
+   "cumulative_reward": 14.477670725028903
+  },
+  {
+   "seed": 20073,
+   "success": true,
+   "num_turns": 6,
+   "low_level_steps": 107,
+   "traj_length_mm": 37.554996728897095,
+   "trans_error_mm": 0.03801305750357119,
+   "angle_error_deg": 0.058255015870268316,
+   "cumulative_reward": 14.160354877130047
+  },
+  {
+   "seed": 20074,
+   "success": true,
+   "num_turns": 2,
+   "low_level_steps": 52,
+   "traj_length_mm": 28.36212158203125,
+   "trans_error_mm": 5.375553448216138,
+   "angle_error_deg": 29.838035852787076,
+   "cumulative_reward": 12.989793235498377
+  },
+  {
+   "seed": 20075,
+   "success": true,
+   "num_turns": 6,
+   "low_level_steps": 110,
+   "traj_length_mm": 44.81011164188385,
+   "trans_error_mm": 0.047474301092473276,
+   "angle_error_deg": 0.0457174108696578,
+   "cumulative_reward": 13.952723680991493
+  },
+  {
+   "seed": 20076,
+   "success": true,
+   "num_turns": 6,
+   "low_level_steps": 114,
+   "traj_length_mm": 44.575825691223145,
+   "trans_error_mm": 0.054879249163961,
+   "angle_error_deg": 0.04992636427545021,
+   "cumulative_reward": 14.353389654973489
+  },
+  {
+   "seed": 20077,
+   "success": true,
+   "num_turns": 2,
+   "low_level_steps": 45,
+   "traj_length_mm": 25.11757469177246,
+   "trans_error_mm": 5.6797239391766885,
+   "angle_error_deg": 35.63507579490053,
+   "cumulative_reward": 12.088360475751625
+  },
+  {
+   "seed": 20078,
+   "success": true,
+   "num_turns": 2,
+   "low_level_steps": 48,
+   "traj_length_mm": 28.913662433624268,
+   "trans_error_mm": 1.4071311869219538,
+   "angle_error_deg": 34.30617803825301,
+   "cumulative_reward": 12.85290812548428
+  },
+  {
+   "seed": 20079,
+   "success": true,
+   "num_turns": 6,
+   "low_level_steps": 112,
+   "traj_length_mm": 45.344067335128784,
+   "trans_error_mm": 0.07150046824081173,
+   "angle_error_deg": 0.03018199791949209,
+   "cumulative_reward": 14.177453851638779
+  },
+  {
+   "seed": 20080,
+   "success": true,
+   "num_turns": 2,
+   "low_level_steps": 50,
+   "traj_length_mm": 27.12876558303833,
+   "trans_error_mm": 3.7776228704660553,
+   "angle_error_deg": 31.835623124333786,
+   "cumulative_reward": 12.484630839101218
+  },
+  {
+   "seed": 20081,
+   "success": true,
+   "num_turns": 4,
+   "low_level_steps": 97,
+   "traj_length_mm": 31.68460190296173,
+   "trans_error_mm": 0.06850789616488473,
+   "angle_error_deg": 0.04340889828052192,
+   "cumulative_reward": 13.718805873550433
+  },
+  {
+   "seed": 20082,
+   "success": true,
+   "num_turns": 6,
+   "low_level_steps": 108,
+   "traj_length_mm": 39.38814628124237,
+   "trans_error_mm": 0.06469696501923895,
+   "angle_error_deg": 0.045246419579798816,
+   "cumulative_reward": 14.092142901499642
+  },
+  {
+   "seed": 20083,
+   "success": true,
+   "num_turns": 6,
+   "low_level_steps": 105,
+   "traj_length_mm": 36.27835273742676,
+   "trans_error_mm": 0.0620941573292043,
+   "angle_error_deg": 0.15408731201773662,
+   "cumulative_reward": 13.786507329420461
+  },
+  {
+   "seed": 20084,
+   "success": true,
+   "num_turns": 6,
+   "low_level_steps": 114,
+   "traj_length_mm": 43.39669579267502,
+   "trans_error_mm": 0.04851948460259651,
+   "angle_error_deg": 0.040578047083308706,
+   "cumulative_reward": 14.438963072223828
+  },
+  {
+   "seed": 20085,
+   "success": true,
+   "num_turns": 6,
+   "low_level_steps": 107,
+   "traj_length_mm": 40.33649206161499,
+   "trans_error_mm": 0.0639923722789197,
+   "angle_error_deg": 0.026782581807688485,
+   "cumulative_reward": 13.97257652288697
+  },
+  {
+   "seed": 20086,
+   "success": true,
+   "num_turns": 4,
+   "low_level_steps": 95,
+   "traj_length_mm": 32.09918975830078,
+   "trans_error_mm": 0.0481839849198862,
+   "angle_error_deg": 0.0341396031203062,
+   "cumulative_reward": 13.497955429460264
+  },
+  {
+   "seed": 20087,
+   "success": true,
+   "num_turns": 6,
+   "low_level_steps": 101,
+   "traj_length_mm": 35.358930587768555,
+   "trans_error_mm": 0.04438577981044199,
+   "angle_error_deg": 0.031834374007876094,
+   "cumulative_reward": 13.77749583450218
+  },
+  {
+   "seed": 20088,
+   "success": true,
+   "num_turns": 4,
+   "low_level_steps": 98,
+   "traj_length_mm": 32.51542991399765,
+   "trans_error_mm": 0.06284334251450022,
+   "angle_error_deg": 0.06726796621761742,
+   "cumulative_reward": 13.699857966312385
+  },
+  {
+   "seed": 20089,
+   "success": true,
+   "num_turns": 2,
+   "low_level_steps": 51,
+   "traj_length_mm": 28.852901458740234,
+   "trans_error_mm": 2.339131212777589,
+   "angle_error_deg": 29.800719935786784,
+   "cumulative_reward": 13.0384551778344
+  },
+  {
+   "seed": 20090,
+   "success": true,
+   "num_turns": 6,
+   "low_level_steps": 110,
+   "traj_length_mm": 41.44524693489075,
+   "trans_error_mm": 0.038241542017694634,
+   "angle_error_deg": 0.04202980867137039,
+   "cumulative_reward": 14.067687063308048
+  },
+  {
+   "seed": 20091,
+   "success": true,
+   "num_turns": 6,
+   "low_level_steps": 117,
+   "traj_length_mm": 44.800963401794434,
+   "trans_error_mm": 0.0572048018918666,
+   "angle_error_deg": 0.05160998470995314,
+   "cumulative_reward": 14.536241706860539
+  },
+  {
+   "seed": 20092,
+   "success": true,
+   "num_turns": 2,
+   "low_level_steps": 44,
+   "traj_length_mm": 25.790300130844116,
+   "trans_error_mm": 5.273244038491235,
+   "angle_error_deg": 25.80570364419183,
+   "cumulative_reward": 12.471972001060482
+  },
+  {
+   "seed": 20093,
+   "success": true,
+   "num_turns": 6,
+   "low_level_steps": 114,
+   "traj_length_mm": 41.82906365394592,
+   "trans_error_mm": 0.036045449279373434,
+   "angle_error_deg": 0.04839040081981445,
+   "cumulative_reward": 14.542265865248003
+  },
+  {
+   "seed": 20094,
+   "success": true,
+   "num_turns": 6,
+   "low_level_steps": 108,
+   "traj_length_mm": 38.96055966615677,
+   "trans_error_mm": 5.379411063173853,
+   "angle_error_deg": 0.020936178791711193,
+   "cumulative_reward": 13.424274346476903
+  },
+  {
+   "seed": 20095,
+   "success": true,
+   "num_turns": 2,
+   "low_level_steps": 51,
+   "traj_length_mm": 28.01142692565918,
+   "trans_error_mm": 3.8695273585972063,
+   "angle_error_deg": 30.764774979566962,
+   "cumulative_reward": 13.002146024646159
+  },
+  {
+   "seed": 20096,
+   "success": true,
+   "num_turns": 6,
+   "low_level_steps": 111,
+   "traj_length_mm": 42.74591135978699,
+   "trans_error_mm": 0.04174454717821586,
+   "angle_error_deg": 0.06272127793960874,
+   "cumulative_reward": 13.948164437256974
+  },
+  {
+   "seed": 20097,
+   "success": true,
+   "num_turns": 2,
+   "low_level_steps": 50,
+   "traj_length_mm": 29.021542072296143,
+   "trans_error_mm": 1.2849656025500502,
+   "angle_error_deg": 28.739211510736368,
+   "cumulative_reward": 12.814295632682596
+  },
+  {
+   "seed": 20098,
+   "success": true,
+   "num_turns": 2,
+   "low_level_steps": 49,
+   "traj_length_mm": 28.97740364074707,
+   "trans_error_mm": 1.2635200636974233,
+   "angle_error_deg": 30.27203246195058,
+   "cumulative_reward": 12.872275639741853
+  },
+  {
+   "seed": 20099,
+   "success": true,
+   "num_turns": 4,
+   "low_level_steps": 99,
+   "traj_length_mm": 33.1440544128418,
+   "trans_error_mm": 0.04301997286104423,
+   "angle_error_deg": 0.04366986635609991,
+   "cumulative_reward": 13.761999615354691
+  }
+ ]
+}

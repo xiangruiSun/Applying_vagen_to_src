@@ -31,7 +31,7 @@ SB3_ALGOS = ("BC", "TD3_BC", "TD3_HER_BC")
 D3_ALGOS = ("IQL",)
 
 
-def load_policy(task: str, algorithm: str, model_path: str = ""):
+def load_policy(task: str, algorithm: str, model_path: str = "", env=None):
     """Return a function obs_dict -> action in [-1, 1]^7."""
     model_dir = os.path.join(get_path("SURGICAI_RL_DIR"), "Evaluation_model", task.capitalize(), algorithm)
     if algorithm in SB3_ALGOS:
@@ -39,7 +39,7 @@ def load_policy(task: str, algorithm: str, model_path: str = ""):
         from RL_algo.td3_BC import TD3_BC
 
         cls = BC if algorithm == "BC" else TD3_BC
-        model = cls.load(model_path or os.path.join(model_dir, "final_model.zip"), device="cpu")
+        model = cls.load(model_path or os.path.join(model_dir, "final_model.zip"), env=env, device="cpu")  # HER checkpoints need the env
         return lambda obs: model.predict(obs, deterministic=True)[0]
     if algorithm in D3_ALGOS:
         import Offline_RL_algo.d3rlpy as d3rlpy
@@ -84,7 +84,7 @@ def main() -> None:
         max_low_level_steps=args.max_low_level_steps,
         camera_topic=None,
     )
-    policy = load_policy(sim.task, args.algorithm, args.model_path)
+    policy = load_policy(sim.task, args.algorithm, args.model_path, env=sim.env)
     seeds = read_seeds(args)
 
     episodes = []

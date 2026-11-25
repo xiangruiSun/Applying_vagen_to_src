@@ -22,6 +22,55 @@ git clone --recursive https://github.com/xiangruiSun/Applying_vagen_to_src.git
 git submodule update --init --recursive
 ```
 
+## Results on `approach` (2026-11-25, RTX 4080 16 GB)
+
+All rows: the same 100 random-needle seeds (20000-20099, `expert_start: false`), SurgicAI's
+success thresholds, 300 low-level step budget. Trajectory length and steps are means over
+successful episodes. Raw per-episode data, the training curves and the validation rollouts
+are in [`results/approach_20261125/`](results/approach_20261125).
+
+| Method | Success | Trajectory length (mm) | Low-level steps | Model turns |
+|---|---|---|---|---|
+| SurgicAI `BC` | 100/100 | 87.1 +- 16.4 | 57.3 +- 10.2 | - |
+| SurgicAI `TD3_HER_BC` | 100/100 | 104.0 +- 44.0 | 73.9 +- 32.2 | - |
+| Qwen3-0.6B untrained, `compact` prompt | 49/100 | 37.8 +- 14.6 | 62.4 +- 16.0 | 1.92 |
+| Qwen3-0.6B trained `compact` (step 30) | 100/100 | 35.1 +- 5.2 | 91.0 +- 23.8 | 4.48 |
+| Qwen3-0.6B untrained, `rag` prompt | 100/100 | 35.5 +- 7.3 | 61.5 +- 14.1 | 2.06 |
+| Qwen3-0.6B trained `rag` (step 60) | 100/100 | 35.9 +- 6.2 | 92.9 +- 25.1 | 4.76 |
+
+- GRPO training takes the hint-free `compact` model from 49/100 to 100/100 on random needle
+  poses, although it only trained from the fixed expert start.
+- With the expert hint the untrained model is already at 100/100, so `rag` training cannot
+  improve success on this task.
+- Training makes episodes longer: mean turns per training episode rise from 2.3 to 5.9 over
+  the `rag` run (`training/training_metrics.csv`), and the trained models need ~4.6 turns /
+  ~92 steps against ~2 turns / ~62 steps untrained. Cause not confirmed; the per-turn
+  `format_reward` (0.1) is a candidate.
+- The in-training validation (`configs/val_*`) uses `expert_start: true`, which switches the
+  needle noise off: its 16 episodes all start from the same scene. Use the
+  `configs/eval_src_approach_text_{compact,rag}.yaml` configs above for generalisation.
+
+What was run, and what differs from the commands below:
+
+- `LR=5e-6`, not `2e-5`. At `2e-5` the model stopped closing `</answer>` after one update;
+  every episode then scored 0, the gradient was 0, and the run could not recover.
+- `compact` stopped at step 32 of 60 (another user's job filled the shared GPU; out of
+  memory in the actor update). The evaluated checkpoint is `best_actor` (step 30). `rag` ran
+  all 60 steps with `GPU_MEM=0.35`, which peaks near 9.5 GB on the 16 GB card.
+- With the conda CUDA toolkit, SGLang's flashinfer build fails with `cannot find -lcuda`.
+  Fix: `mkdir -p ~/vagen_src/cuda_link && ln -s /usr/lib/x86_64-linux-gnu/libcuda.so.1
+  ~/vagen_src/cuda_link/libcuda.so` and `export LIBRARY_PATH=~/vagen_src/cuda_link` before
+  `train_grpo.sh` / `serve_model.sh`.
+- After a trainer is killed mid-episode the env server keeps its session for
+  `--session_timeout` (600 s); the next run waits that long before its first episode.
+- `scripts/eval_surgicai_baseline.py` now passes the env when loading a checkpoint
+  (`TD3_HER_BC` needs it for its HER replay buffer).
+- Evaluating a checkpoint: serve it with
+  `MODEL_PATH=<run>/verl_checkpoints/.../huggingface MEM_FRACTION=0.3 MAX_MODEL_LEN=4096 bash scripts/serve_model.sh`,
+  then `MODEL=<same path> bash scripts/eval_vagen.sh configs/eval_src_approach_text_compact.yaml envs.0.harness=no_concat`.
+  `MODEL` must be the real model id or path: the evaluator loads its tokenizer from it.
+- Checkpoints (15 GB) are not in the repository.
+
 ## Status and how to continue on a new machine (2026-11-25)
 
 **Where the work stands**
