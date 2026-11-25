@@ -69,7 +69,8 @@ What was run, and what differs from the commands below:
   `MODEL_PATH=<run>/verl_checkpoints/.../huggingface MEM_FRACTION=0.3 MAX_MODEL_LEN=4096 bash scripts/serve_model.sh`,
   then `MODEL=<same path> bash scripts/eval_vagen.sh configs/eval_src_approach_text_compact.yaml envs.0.harness=no_concat`.
   `MODEL` must be the real model id or path: the evaluator loads its tokenizer from it.
-- Checkpoints (15 GB) are not in the repository.
+- The two evaluated models are in [`checkpoints/`](checkpoints) through Git LFS
+  (`git lfs pull`); optimizer states and the other checkpoints are not in the repository.
 
 ## Status and how to continue on a new machine (2026-11-25)
 
